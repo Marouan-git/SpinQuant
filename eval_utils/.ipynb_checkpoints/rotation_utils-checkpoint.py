@@ -8,6 +8,9 @@
 # This code is based on QuaRot(https://github.com/spcl/QuaRot/tree/main/quarot).
 # Licensed under Apache License 2.0.
 
+import os
+import json
+
 import functools
 import math
 
@@ -89,13 +92,26 @@ def rotate_mlp_input(layer, R1):
         W.weight.data = torch.matmul(W_, R1).to(device="cpu", dtype=dtype)
 
 
-def rotate_mlp_output(layer, R1, args):
+#def rotate_mlp_output(layer, R1, args):
+def rotate_mlp_output(layer, R1, layer_idx, selective_had_layers, args):
     # Rotate the MLP output weights and bias.
     W = layer.mlp.down_proj
+    layer_identifier = f"Layer {layer_idx} ({W})"
+    
     dtype = W.weight.data.dtype
     W_ = W.weight.data.to(device="cuda", dtype=torch.float64)
     W.weight.data = torch.matmul(R1.T, W_).to(device="cpu", dtype=dtype)
-    if args.hadamard_online: # Check the NEW flag
+
+    if selective_had_layers is not None:
+        # If a list was provided, apply only if this layer is in the list
+        if layer_idx in selective_had_layers:
+            apply_exact_had_to_linear(
+                 W, had_dim=-1, output=False
+             )
+            print(f"INFO: Applying inverse Hadamard to weights of {layer_identifier} (Selective Mode).")
+        else:
+             print(f"INFO: Skipping inverse Hadamard on weights of {layer_identifier} (Not in selective list).")
+    elif args.hadamard_online:
          print(f"INFO: Applying inverse Hadamard to weights of {W} (SpinQuant_had mode).")
          apply_exact_had_to_linear(
              W, had_dim=-1, output=False
@@ -125,6 +141,25 @@ def rotate_ov_proj(layer, head_num, head_dim, R2=None):
 
 @torch.inference_mode()
 def rotate_model(model, args):
+    selective_had_layers = None
+    selective_had_path = getattr(args, 'selective_had_layers_path', None)
+
+    if selective_had_path:
+        print(f"INFO (rotate_model): Found selective had layers path: {selective_had_path}")
+        if os.path.exists(selective_had_path):
+            try:
+                with open(selective_had_path, 'r') as f:
+                    data = json.load(f)
+                    if "layers_to_rotate" in data and isinstance(data["layers_to_rotate"], list):
+                        selective_had_layers = set(data["layers_to_rotate"])
+                        print(f"INFO (rotate_model): Loaded {len(selective_had_layers)} indices for selective weight Had compensation.")
+                    else:
+                         print(f"Warning (rotate_model): JSON invalid format in {selective_had_path}. Weight Had compensation might be incorrect.")
+            except Exception as e:
+                print(f"Warning (rotate_model): Error loading JSON {selective_had_path}: {e}. Weight Had compensation might be incorrect.")
+        else:
+            print(f"Warning (rotate_model): Selective had layers file not found: {selective_had_path}. Weight Had compensation might be incorrect.")
+            
     R1 = get_orthogonal_matrix(model.config.hidden_size, args.rotate_mode)
     if args.optimized_rotation_path is not None:
         R_cpk = args.optimized_rotation_path
@@ -147,7 +182,8 @@ def rotate_model(model, args):
         rotate_attention_inputs(layers[idx], R1)
         rotate_attention_output(layers[idx], R1)
         rotate_mlp_input(layers[idx], R1)
-        rotate_mlp_output(layers[idx], R1, args)
+        #rotate_mlp_output(layers[idx], R1, args)
+        rotate_mlp_output(layers[idx], R1, idx, selective_had_layers, args)
         rotate_ov_proj(layers[idx], num_heads, head_dim, R2=R2)
 
 
@@ -183,6 +219,7 @@ class QKRotationWrapper(torch.nn.Module):
     def forward(self, *args, **kwargs):
         q, k = self.func(*args, **kwargs)
         dtype = q.dtype
+        # R3 rotation
         q = (HadamardTransform.apply(q.float()) / math.sqrt(q.shape[-1])).to(dtype)
         k = (HadamardTransform.apply(k.float()) / math.sqrt(k.shape[-1])).to(dtype)
         (bsz, num_heads, seq_len, head_dim) = k.shape

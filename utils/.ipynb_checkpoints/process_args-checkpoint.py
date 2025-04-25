@@ -66,6 +66,12 @@ def parser_gen():
         help="Enable online Hadamard rotations (R3, R4) for SpinQuant_had configuration."
     )
     parser.add_argument(
+        "--selective_had_layers_path",
+        type=str,
+        default=None,
+        help="Path to JSON file containing list of layer indices for selective online Hadamard rotation."
+    )
+    parser.add_argument(
         "--rotate_mode", type=str, default="hadamard", choices=["hadamard", "random"]
     )
     parser.add_argument(
@@ -246,6 +252,7 @@ def parser_gen():
     parser.add_argument(
         "--layer_idx", type=int, default=10, help="Which decoder layer to capture"
     )
+    
 
     args, unknown = parser.parse_known_args()
 
