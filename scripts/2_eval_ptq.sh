@@ -17,6 +17,7 @@
 HAD_ONLINE_SHELL_FLAG=0 # Track if --hadamard_online was passed
 SPARSE_HAD_SHELL_FLAG=0 # Track if --sparse_had was passed
 LAYER_LIST_PATH="layers_to_rotate.json" # Default path for the JSON list
+R3_ONLY_SHELL_FLAG=0
 
 # --- Argument Parsing ---
 
@@ -45,7 +46,11 @@ while [[ $# -gt 0 ]]; do
       SPARSE_HAD_SHELL_FLAG=1
       shift # consume flag
       ;;
-    --layer_list_file) # --- NEW ARGUMENT ---
+    --online_r3_only) 
+      R3_ONLY_SHELL_FLAG=1; 
+      shift 
+      ;;
+    --layer_list_file)
       if [[ -n "$2" ]] && [[ "$2" != --* ]]; then
         LAYER_LIST_PATH="$2" # Override default path
         shift 2 # consume flag and its value
@@ -77,14 +82,14 @@ PYTHON_ARGS+=" --w_clip --a_asym --k_asym --v_asym --k_groupsize 128 --v_groupsi
 PYTHON_ARGS+=" --rotate" # Base rotation is always needed for these modes
 
 # Add optimized rotation path if needed
-PYTHON_ARGS+=" --optimized_rotation_path \"optimized_rotation/R.bin\"" # Quote path
+PYTHON_ARGS+=" --optimized_rotation_path \"optimized_rotation/R_16_4_4.bin\"" # Quote path
 
 # Add access token if needed
 PYTHON_ARGS+=" --access_token \"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\"" # Quote token
 
 
 # --- Logic for Hadamard Flags passed to ptq.py ---
-# Priority: --sparse_had (if file exists) > --hadamard_online > None
+# Priority: sparse > global > r3_only > none
 
 HAD_ARG_FOR_PYTHON="" # Argument to potentially add for python
 
@@ -104,6 +109,9 @@ elif [[ $HAD_ONLINE_SHELL_FLAG -eq 1 ]]; then
   # Sparse not used, but hadamard_online was: use global hadamard
   HAD_ARG_FOR_PYTHON="--hadamard_online"
   echo "INFO: --hadamard_online flag detected (and --sparse_had not used/failed). Enabling global Hadamard for ptq.py."
+elif [[ $R3_ONLY_SHELL_FLAG -eq 1 ]]; then
+  HAD_ARG_FOR_PYTHON="--online_r3_only"
+  echo "INFO: Shell: --online_r3_only detected. Enabling R3 ONLY for ptq.py (No R4, R3 if k<16)."
 else
   # Neither flag used
   echo "INFO: No Hadamard flags detected. No online R4 Hadamard will be applied by ptq.py."
@@ -124,3 +132,31 @@ echo "-----------------------------------------------------------------------"
 
 # Use eval to correctly handle arguments with spaces or quotes within PYTHON_ARGS
 eval torchrun --nnodes=1 --nproc_per_node=1 ptq.py $PYTHON_ARGS
+
+# --- Example Usage ---
+# torchrun --nnodes=1 --nproc_per_node=1 ptq.py \
+# --input_model $1 \
+# --do_train False \
+# --do_eval True \
+# --per_device_eval_batch_size 4 \
+# --model_max_length 2048 \
+# --fp16 False \
+# --bf16 True \
+# --save_safetensors False \
+# --w_bits $2 \
+# --a_bits $3 \
+# --k_bits $4 \
+# --v_bits $4 \
+# --w_clip \
+# --a_asym \
+# --k_asym \
+# --v_asym \
+# --k_groupsize 128 \
+# --v_groupsize 128 \
+# --rotate \
+# #--hadamard_online
+# #--online_r3_only \
+# #--sparse_had \
+# #--selective_had_layers_path "llama2_7b_rotate_layers_p5.json" \
+# --optimized_rotation_path "optimized_rotation/R.bin" \
+# --access_token "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"

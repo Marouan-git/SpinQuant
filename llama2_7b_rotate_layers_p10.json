@@ -1,0 +1,11 @@
+{
+    "model_path": "meta-llama/Llama-2-7b-hf",
+    "selection_method": "percentile",
+    "selection_value": 10.0,
+    "layers_to_rotate": [
+        0,
+        1,
+        4,
+        30
+    ]
+}

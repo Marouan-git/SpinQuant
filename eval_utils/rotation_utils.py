@@ -161,8 +161,10 @@ def rotate_model(model, args):
             print(f"Warning (rotate_model): Selective had layers file not found: {selective_had_path}. Weight Had compensation might be incorrect.")
             
     R1 = get_orthogonal_matrix(model.config.hidden_size, args.rotate_mode)
+    print(f"INFO: optimized rotation path: {args.optimized_rotation_path}")
     if args.optimized_rotation_path is not None:
         R_cpk = args.optimized_rotation_path
+        print(f"INFO (rotate_model): Found optimized rotation path: {R_cpk}")
         R1 = torch.load(R_cpk)["R1"].cuda().to(torch.float64)
     config = model.config
     num_heads = config.num_attention_heads
@@ -219,9 +221,12 @@ class QKRotationWrapper(torch.nn.Module):
     def forward(self, *args, **kwargs):
         q, k = self.func(*args, **kwargs)
         dtype = q.dtype
+        
         # R3 rotation
+
         q = (HadamardTransform.apply(q.float()) / math.sqrt(q.shape[-1])).to(dtype)
         k = (HadamardTransform.apply(k.float()) / math.sqrt(k.shape[-1])).to(dtype)
+            
         (bsz, num_heads, seq_len, head_dim) = k.shape
 
         if self.k_groupsize == -1:  # token-wise quantization

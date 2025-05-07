@@ -60,7 +60,32 @@ def parser_gen():
                         out-projection. Note that this does not apply rotation to the K/Q and they will be rotated
                         if we want to quantize the Keys""",
     )
+    # --- Hadamard Control Group ---
+    # Note: These control the ONLINE R3/R4 hadamard parts.
+    # --rotate flag controls the base offline R1/R2 rotations.
+
+    hadamard_group = parser.add_argument_group('Online Hadamard Rotation Control')
+
     parser.add_argument(
+        "--hadamard_online",
+        action="store_true",
+        help="Enable GLOBAL online Hadamard (R4 for down_proj + R3 if k_bits<16)."
+    )
+    parser.add_argument(
+        "--selective_had_layers_path",
+        type=str,
+        default=None,#"llama2_7b_rotate_layers_p5.json",
+        help="Enable SELECTIVE online Hadamard (R4 for down_proj listed in JSON + R3 if k_bits<16)."
+               " Path to JSON file containing 'layers_to_rotate' list."
+    )
+    parser.add_argument(
+        "--online_r3_only",
+        action="store_true",
+        help="Enable ONLY R3 online Hadamard (if k_bits<16), disable R4 online Hadamard."
+    )
+    # --- End Hadamard Control Group ---
+    
+    '''parser.add_argument(
         "--hadamard_online",
         action="store_true",
         help="Enable online Hadamard rotations (R3, R4) for SpinQuant_had configuration."
@@ -70,7 +95,7 @@ def parser_gen():
         type=str,
         default=None,
         help="Path to JSON file containing list of layer indices for selective online Hadamard rotation."
-    )
+    )'''
     parser.add_argument(
         "--rotate_mode", type=str, default="hadamard", choices=["hadamard", "random"]
     )
@@ -256,6 +281,16 @@ def parser_gen():
 
     args, unknown = parser.parse_known_args()
 
+    # --- Add validation for mutually exclusive logic (optional but good) ---
+    # Although shell script enforces passing only one, Python can double-check.
+    had_flags_count = sum([
+        args.hadamard_online,
+        args.selective_had_layers_path is not None,
+        args.online_r3_only
+    ])
+    if had_flags_count > 1:
+        parser.error("Only one of --hadamard_online, --selective_had_layers_path, or --online_r3_only can be specified.")
+
     # assert (
     #     args.a_groupsize == args.w_groupsize
     # ), "a_groupsize should be the same as w_groupsize!"
@@ -271,6 +306,8 @@ def process_args_ptq():
 
     parser = transformers.HfArgumentParser((ModelArguments, TrainingArguments))
     model_args, training_args = parser.parse_args_into_dataclasses(args=unknown_args)
+    print(f"Optimized rotation path: {model_args.optimized_rotation_path}")
+    print(f"Selective hadamard layers path: {ptq_args.selective_had_layers_path}")
     if model_args.optimized_rotation_path is not None:
         ptq_args.optimized_rotation_path = model_args.optimized_rotation_path
     else:

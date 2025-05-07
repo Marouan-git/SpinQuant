@@ -12,6 +12,8 @@ import logging
 import os
 
 import torch
+import torch.cuda
+import time
 from tqdm import tqdm
 
 from utils import model_utils
@@ -21,106 +23,191 @@ from utils import model_utils
 def evaluator(model, testenc, dev, args):
     model.eval()
 
-    use_cache = model.config.use_cache
-    model.config.use_cache = False
+    max_trials = 1
 
-    layers = model.model.layers
-    model.model.embed_tokens = model.model.embed_tokens.to(dev)
+    list_total_inference_time = []
+    list_time_per_token = []
+    list_ppl = []
 
-    layers[0] = layers[0].to(dev)
+    list_total_inference_time_perf_count = []
+    list_time_per_token_perf_count = []
 
-    # Convert the whole text of evaluation dataset into batches of sequences.
-    input_ids = testenc.input_ids  # (1, text_len)
-    nsamples = input_ids.numel() // model.seqlen  # The tail is truncated.
-    input_ids = (
-        input_ids[:, : nsamples * model.seqlen].view(nsamples, model.seqlen).to(dev)
-    )  # (nsamples, seqlen)
 
-    batch_size = args.bsz
-    input_ids = [input_ids[i : i + batch_size] for i in range(0, nsamples, batch_size)]
-    nbatches = len(input_ids)
 
-    dtype = next(iter(model.parameters())).dtype
-    # The input of the first decoder layer.
-    inps = torch.zeros(
-        (nbatches, batch_size, model.seqlen, model.config.hidden_size),
-        dtype=dtype,
-        device=dev,
-    )
-    inps = [0] * nbatches
-    cache = {"i": 0, "attention_mask": None}
+    for _ in range(max_trials):
 
-    class Catcher(torch.nn.Module):
-        def __init__(self, module):
-            super().__init__()
-            self.module = module
+        use_cache = model.config.use_cache
+        model.config.use_cache = False
 
-        def forward(self, inp, **kwargs):
-            inps[cache["i"]] = inp
-            cache["i"] += 1
-            cache["attention_mask"] = kwargs["attention_mask"]
-            cache["position_ids"] = kwargs["position_ids"]
-            raise ValueError
+        layers = model.model.layers
+        model.model.embed_tokens = model.model.embed_tokens.to(dev)
 
-    layers[0] = Catcher(layers[0])
+        layers[0] = layers[0].to(dev)
 
-    for i in range(nbatches):
-        batch = input_ids[i]
-        try:
-            model(batch)
-        except ValueError:
-            pass
-    layers[0] = layers[0].module
-    layers[0] = layers[0].cpu()
+        seq_len = model.seqlen
 
-    model.model.embed_tokens = model.model.embed_tokens.cpu()
-    position_ids = cache["position_ids"]
+        # Convert the whole text of evaluation dataset into batches of sequences.
+        input_ids = testenc.input_ids  # (1, text_len)
+        nsamples = input_ids.numel() // seq_len  # The tail is truncated.
+        input_ids = (
+            input_ids[:, : nsamples * seq_len].view(nsamples, seq_len).to(dev)
+        )  # (nsamples, seqlen)
+        
+        total_tokens_processed = nsamples * seq_len
 
-    torch.cuda.empty_cache()
-    outs = [0] * nbatches
-    attention_mask = cache["attention_mask"]
+        print(f"INFO: Evaluator using seqlen={seq_len}, found {nsamples} samples ({total_tokens_processed} tokens).")
 
-    for i in tqdm(range(len(layers)), desc="(Eval) Layers"):
-        layer = layers[i].to(dev)
+        batch_size = args.bsz
+        input_ids = [input_ids[i : i + batch_size] for i in range(0, nsamples, batch_size)]
+        nbatches = len(input_ids)
 
-        # Dump the layer input and output
-        if args.capture_layer_io and args.layer_idx == i:
-            captured_io = model_utils.capture_layer_io(layer, inps)
-            save_path = model_utils.get_layer_io_save_path(args)
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)
-            torch.save(captured_io, save_path)
-            logging.info(f"Dumped layer input and output to: {save_path}")
+        dtype = next(iter(model.parameters())).dtype
+        # The input of the first decoder layer.
+        inps = torch.zeros(
+            (nbatches, batch_size, model.seqlen, model.config.hidden_size),
+            dtype=dtype,
+            device=dev,
+        )
+        inps = [0] * nbatches
+        cache = {"i": 0, "attention_mask": None}
 
-        for j in range(nbatches):
-            outs[j] = layer(
-                inps[j],
-                attention_mask=attention_mask,
-                #  defined.
-                position_ids=position_ids,
-            )[0]
-        layers[i] = layer.cpu()
-        del layer
+        class Catcher(torch.nn.Module):
+            def __init__(self, module):
+                super().__init__()
+                self.module = module
+
+            def forward(self, inp, **kwargs):
+                inps[cache["i"]] = inp
+                cache["i"] += 1
+                cache["attention_mask"] = kwargs["attention_mask"]
+                cache["position_ids"] = kwargs["position_ids"]
+                raise ValueError
+
+        layers[0] = Catcher(layers[0])
+
+        for i in range(nbatches):
+            batch = input_ids[i]
+            try:
+                model(batch)
+            except ValueError:
+                pass
+        layers[0] = layers[0].module
+        layers[0] = layers[0].cpu()
+
+        model.model.embed_tokens = model.model.embed_tokens.cpu()
+        position_ids = cache["position_ids"]
+
         torch.cuda.empty_cache()
-        inps, outs = outs, inps
+        outs = [0] * nbatches
+        attention_mask = cache["attention_mask"]
 
-    if model.model.norm is not None:
-        model.model.norm = model.model.norm.to(dev)
+        # --- Timing Initialization ---
+        total_layer_processing_time_ms = 0.0
+        total_lm_head_time_ms = 0.0
+        start_event_layer_loop = torch.cuda.Event(enable_timing=True)
+        end_event_layer_loop = torch.cuda.Event(enable_timing=True)
+        start_event_head_loop = torch.cuda.Event(enable_timing=True)
+        end_event_head_loop = torch.cuda.Event(enable_timing=True)
+        # --- End Timing Initialization ---
 
-    model.lm_head = model.lm_head.to(dev)
-    nlls = []
-    loss_fct = torch.nn.CrossEntropyLoss(reduction="none")
-    for i in range(nbatches):
-        hidden_states = inps[i]
+        torch.cuda.synchronize()
+        start_event_layer_loop.record()
+        start_cpu_layer = time.perf_counter()
+
+        for i in tqdm(range(len(layers)), desc="(Eval) Layers"):
+            layer = layers[i].to(dev)
+
+            # Dump the layer input and output
+            if args.capture_layer_io and args.layer_idx == i:
+                captured_io = model_utils.capture_layer_io(layer, inps)
+                save_path = model_utils.get_layer_io_save_path(args)
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                torch.save(captured_io, save_path)
+                logging.info(f"Dumped layer input and output to: {save_path}")
+
+            for j in range(nbatches):
+                outs[j] = layer(
+                    inps[j],
+                    attention_mask=attention_mask,
+                    #  defined.
+                    position_ids=position_ids,
+                )[0]
+            layers[i] = layer.cpu()
+            del layer
+            torch.cuda.empty_cache()
+            inps, outs = outs, inps
+        
+        end_event_layer_loop.record()
+        torch.cuda.synchronize()
+        end_cpu_layer = time.perf_counter()
+        total_layer_processing_time_ms_cpu = (end_cpu_layer - start_cpu_layer) * 1000
+        print(f"INFO: Layer processing loop finished. Time (CPU): {total_layer_processing_time_ms_cpu:.2f} ms")
+        total_layer_processing_time_ms = start_event_layer_loop.elapsed_time(end_event_layer_loop)
+        print(f"INFO: Layer processing loop finished. Time: {total_layer_processing_time_ms:.2f} ms")
+        # --- End Layer Processing Loop ---
+
         if model.model.norm is not None:
-            hidden_states = model.model.norm(hidden_states)
-        lm_logits = model.lm_head(hidden_states)
-        shift_logits = lm_logits[:, :-1, :]
-        shift_labels = input_ids[i][:, 1:]
-        loss = loss_fct(shift_logits.permute(0, 2, 1), shift_labels)
-        neg_log_likelihood = loss.float().mean(dim=1)
-        nlls.append(neg_log_likelihood)
-    nlls_tensor = torch.cat(nlls)
-    ppl = torch.exp(nlls_tensor.mean())
-    model.config.use_cache = use_cache
-    logging.info(f"\n WikiText2 PPL: {ppl.item():.3f}")
-    return ppl.item()
+            model.model.norm = model.model.norm.to(dev)
+
+        model.lm_head = model.lm_head.to(dev)
+        nlls = []
+        loss_fct = torch.nn.CrossEntropyLoss(reduction="none")
+        print("INFO: Starting LM Head and Loss calculation loop...")
+        torch.cuda.synchronize()
+        start_event_head_loop.record()
+        start_cpu_head = time.perf_counter()
+
+        for i in range(nbatches):
+            hidden_states = inps[i]
+            if model.model.norm is not None:
+                hidden_states = model.model.norm(hidden_states)
+            lm_logits = model.lm_head(hidden_states)
+            shift_logits = lm_logits[:, :-1, :]
+            shift_labels = input_ids[i][:, 1:]
+            loss = loss_fct(shift_logits.permute(0, 2, 1), shift_labels)
+            neg_log_likelihood = loss.float().mean(dim=1)
+            nlls.append(neg_log_likelihood)
+        
+        end_event_head_loop.record()
+        torch.cuda.synchronize()
+        end_cpu_head = time.perf_counter()
+        total_lm_head_processing_time_cpu = (end_cpu_head - start_cpu_head) * 1000
+        print(f"INFO: LM Head and Loss calculation loop finished. Time (CPU): {total_lm_head_processing_time_cpu:.2f} ms")
+        total_lm_head_time_ms = start_event_head_loop.elapsed_time(end_event_head_loop)
+        print(f"INFO: LM Head loop finished. Time: {total_lm_head_time_ms:.2f} ms")
+        # --- End LM Head Loop ---
+
+        nlls_tensor = torch.cat(nlls)
+        ppl = torch.exp(nlls_tensor.mean())
+        model.config.use_cache = use_cache
+        logging.info(f"\n WikiText2 PPL: {ppl.item():.3f}")
+
+        # --- Timing Report ---
+        total_inference_time_ms = total_layer_processing_time_ms + total_lm_head_time_ms
+        total_inference_time_ms_cpu = total_layer_processing_time_ms_cpu + total_lm_head_processing_time_cpu
+        if total_tokens_processed > 0:
+            time_per_token_ms = total_inference_time_ms / total_tokens_processed
+            time_per_token_ms_cpu = total_inference_time_ms_cpu / total_tokens_processed
+            print(f"Total Inference Time (Layers + LM Head) (CPU): {total_inference_time_ms_cpu:.2f} ms")
+            print(f"Average Inference Time per Token (CPU): {time_per_token_ms_cpu:.4f} ms/token")
+            print(f"Total Inference Time (Layers + LM Head): {total_inference_time_ms:.2f} ms")
+            print(f"Average Inference Time per Token: {time_per_token_ms:.4f} ms/token")
+            list_total_inference_time.append(total_inference_time_ms)
+            list_total_inference_time_perf_count.append(total_inference_time_ms_cpu)
+            list_time_per_token.append(time_per_token_ms)
+            list_time_per_token_perf_count.append(time_per_token_ms_cpu)
+            list_ppl.append(ppl.item())
+        else:
+            print("No tokens processed, cannot calculate time per token.")
+        # --- End Timing Report ---
+    avg_total_inference_time = sum(list_total_inference_time) / len(list_total_inference_time)
+    avg_total_inference_time_perf_count = sum(list_total_inference_time_perf_count) / len(list_total_inference_time_perf_count)
+    avg_time_per_token = sum(list_time_per_token) / len(list_time_per_token)
+    avg_time_per_token_perf_count = sum(list_time_per_token_perf_count) / len(list_time_per_token_perf_count)
+    avg_ppl = sum(list_ppl) / len(list_ppl)
+    print(f"Average Total Inference Time: {avg_total_inference_time:.2f} ms")
+    print(f"Average Total Inference Time (CPU): {avg_total_inference_time_perf_count:.2f} ms")
+    print(f"Average Time per Token: {avg_time_per_token:.4f} ms/token")
+    print(f"Average Time per Token (CPU): {avg_time_per_token_perf_count:.4f} ms/token")
+    print(f"Average PPL: {avg_ppl:.3f}")
+    return avg_ppl
