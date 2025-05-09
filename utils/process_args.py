@@ -277,6 +277,12 @@ def parser_gen():
     parser.add_argument(
         "--layer_idx", type=int, default=10, help="Which decoder layer to capture"
     )
+    parser.add_argument(
+        "--nb_eval_runs",
+        type=int,
+        default=1,
+        help="Number of evaluation runs",
+    )
     
 
     args, unknown = parser.parse_known_args()

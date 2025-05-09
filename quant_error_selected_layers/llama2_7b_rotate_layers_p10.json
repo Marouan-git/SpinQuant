@@ -1,0 +1,12 @@
+{
+    "model_path": "meta-llama/Llama-2-7b-hf",
+    "quant_config": "A4G-1SymFalse",
+    "selection_method": "percentile_highest_error",
+    "selection_value": 10.0,
+    "layers_to_rotate": [
+        28,
+        29,
+        30,
+        31
+    ]
+}

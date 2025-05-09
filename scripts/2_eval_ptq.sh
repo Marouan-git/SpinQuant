@@ -18,12 +18,15 @@ HAD_ONLINE_SHELL_FLAG=0 # Track if --hadamard_online was passed
 SPARSE_HAD_SHELL_FLAG=0 # Track if --sparse_had was passed
 LAYER_LIST_PATH="layers_to_rotate.json" # Default path for the JSON list
 R3_ONLY_SHELL_FLAG=0
+OPTIMIZED_ROTATION_PATH_VALUE=""
+NB_EVAL_RUNS=1
 
 # --- Argument Parsing ---
 
 # Capture positional arguments first
 if [[ $# -lt 4 ]]; then
-  echo "Usage: $0 <model_path> <w_bits> <a_bits> <kv_bits> [--hadamard_online | --sparse_had [--layer_list_file <path>]]"
+  echo "Usage: $0 <model_path> <w_bits> <a_bits> <kv_bits> [options...]"
+  echo "Options include: --hadamard_online, --sparse_had, --layer_list_file <path>, --online_r3_only, --optimized_rotation_path <path>, --nb_eval_runs <int>"
   exit 1
 fi
 MODEL_PATH="$1"
@@ -59,7 +62,12 @@ while [[ $# -gt 0 ]]; do
         exit 1
       fi
       ;;
-    # Add cases for any other flags your SHELL script might need
+    --optimized_rotation_path) 
+      if [[ -n "$2" ]] && [[ "$2" != --* ]]; then OPTIMIZED_ROTATION_PATH="$2"; shift 2;
+      else echo "ERROR: --optimized_rotation_path requires path." >&2; exit 1; fi ;;
+    --nb_eval_runs) 
+      if [[ -n "$2" ]] && [[ "$2" != --* ]] && [[ "$2" =~ ^[0-9]+$ ]]; then NB_EVAL_RUNS="$2"; shift 2;
+      else echo "ERROR: --nb_eval_runs requires an integer value." >&2; exit 1; fi ;;
     *) # Unknown option passed to shell script
       echo "Warning: Unknown shell script option ignored: $1"
       shift
@@ -81,11 +89,22 @@ PYTHON_ARGS+=" --model_max_length 2048 --fp16 False --bf16 True --save_safetenso
 PYTHON_ARGS+=" --w_clip --a_asym --k_asym --v_asym --k_groupsize 128 --v_groupsize 128"
 PYTHON_ARGS+=" --rotate" # Base rotation is always needed for these modes
 
+# --- Conditionally add optimized rotation path ---
+if [[ -n "$OPTIMIZED_ROTATION_PATH" ]]; then # Only add if the variable is not empty
+    PYTHON_ARGS+=" --optimized_rotation_path \"$OPTIMIZED_ROTATION_PATH\""
+    echo "INFO: Using optimized rotation path: $OPTIMIZED_ROTATION_PATH"
+else
+    echo "INFO: No optimized rotation path provided. Using random rotation for R1/R2."
+fi
+# ---------------------------------------------
+
 # Add optimized rotation path if needed
-PYTHON_ARGS+=" --optimized_rotation_path \"optimized_rotation/R_16_4_4.bin\"" # Quote path
+#PYTHON_ARGS+=" --optimized_rotation_path \"optimized_rotation/R_16_4_4.bin\"" # Quote path
 
 # Add access token if needed
 PYTHON_ARGS+=" --access_token \"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\"" # Quote token
+
+PYTHON_ARGS+=" --nb_eval_runs $NB_EVAL_RUNS" # Number of times to perform evaluation (for inference time measurements)
 
 
 # --- Logic for Hadamard Flags passed to ptq.py ---

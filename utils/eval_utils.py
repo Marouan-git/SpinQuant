@@ -23,7 +23,8 @@ from utils import model_utils
 def evaluator(model, testenc, dev, args):
     model.eval()
 
-    max_trials = 1
+    print("INFO: nb of evaluation runs: ", args.nb_eval_runs)
+    max_trials = args.nb_eval_runs
 
     list_total_inference_time = []
     list_time_per_token = []

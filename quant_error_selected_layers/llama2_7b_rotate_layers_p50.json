@@ -1,16 +1,12 @@
 {
     "model_path": "meta-llama/Llama-2-7b-hf",
-    "kurtosis_threshold": 500.0,
+    "quant_config": "A4G-1SymFalse",
+    "selection_method": "percentile_highest_error",
+    "selection_value": 50.0,
     "layers_to_rotate": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        6,
-        7,
-        8,
+        16,
         17,
+        18,
         19,
         20,
         21,
@@ -20,6 +16,9 @@
         25,
         26,
         27,
-        30
+        28,
+        29,
+        30,
+        31
     ]
 }

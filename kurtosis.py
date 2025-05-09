@@ -214,22 +214,6 @@ def main(args):
             plot_values = [max(val, 1e-6) for val in activation_kurtosis_results.values() if not np.isnan(val)]
             if not plot_layers: print("No valid kurtosis values to plot.")
             else:
-                # plt.figure(figsize=(15, 6))
-                # colors = ['red' if layer in layers_to_rotate else 'skyblue' for layer in plot_layers] # Color selected bars
-                # plt.bar(plot_layers, plot_values, color=colors)
-                # plt.yscale('log') # Use log scale
-                # plt.axhline(y=args.kurtosis_threshold, color='gray', linestyle='--', label=f'Threshold ({args.kurtosis_threshold})') # Add threshold line
-                # plt.xlabel("Layer Index")
-                # plt.ylabel("Activation Kurtosis (Pearson's) - Log Scale")
-                # plt.title(f"Input Activation Kurtosis for mlp.down_proj Layers\nModel: {args.model_path}")
-                # plt.xticks(ticks=plot_layers, fontsize=8)
-                # all_layer_indices = sorted(list(activation_kurtosis_results.keys()))
-                # if all_layer_indices: plt.xlim(min(all_layer_indices)-0.5, max(all_layer_indices)+0.5)
-                # plt.grid(axis='y', linestyle='--', alpha=0.7)
-                # plt.legend() # Show threshold label
-                # plt.tight_layout()
-                # plt.savefig(args.plot_output_path)
-                # print("Plot saved successfully.")
                 plt.figure(figsize=(15, 6))
                 colors = ['red' if layer in layers_to_rotate else 'skyblue' for layer in plot_layers]
                 plt.bar(plot_layers, plot_values, color=colors)
