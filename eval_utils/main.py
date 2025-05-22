@@ -210,7 +210,7 @@ def ptq_model(args, model, model_args=None): # args is ptq_args from process_arg
 
             if "lm_head" in name: # Skip lm_head input quantization
                 print(f"INFO: Skipping lm_head quantization for {name}.")
-                layer_input_bits = 16
+                layer_input_bits = 16 #layer_input_bits = 16
 
             if "down_proj" in name: # Set the down_proj input precision
                 if args.int8_down_proj: 

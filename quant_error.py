@@ -269,7 +269,7 @@ def main(args):
                 title = f"Input Activation Quant Error (A{args.a_bits}) for mlp.down_proj Layers\nModel: {args.model_path}"
                 if selection_method: title += f"\nSelection: {selection_method}={selection_value}% (Highest Error)"
                 plt.title(title)
-                plt.xticks(ticks=plot_layers, rotation=90, fontsize=8)
+                plt.xticks(ticks=plot_layers, fontsize=8)
                 all_layer_indices = sorted(list(activation_qerror_results.keys()))
                 if all_layer_indices: plt.xlim(min(all_layer_indices)-0.5, max(all_layer_indices)+0.5)
                 plt.grid(axis='y', linestyle='--', alpha=0.7); plt.tight_layout()

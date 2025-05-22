@@ -10,6 +10,7 @@
 
 import logging
 import os
+import json
 
 import torch
 import torch.cuda
@@ -202,13 +203,62 @@ def evaluator(model, testenc, dev, args):
             print("No tokens processed, cannot calculate time per token.")
         # --- End Timing Report ---
     avg_total_inference_time = sum(list_total_inference_time) / len(list_total_inference_time)
+    var_total_inference_time = sum(
+        [(x - avg_total_inference_time) ** 2 for x in list_total_inference_time]
+    ) / len(list_total_inference_time)
     avg_total_inference_time_perf_count = sum(list_total_inference_time_perf_count) / len(list_total_inference_time_perf_count)
+    var_total_inference_time_perf_count = sum(
+        [(x - avg_total_inference_time_perf_count) ** 2 for x in list_total_inference_time_perf_count]
+    ) / len(list_total_inference_time_perf_count)
+
     avg_time_per_token = sum(list_time_per_token) / len(list_time_per_token)
+    var_time_per_token = sum(
+        [(x - avg_time_per_token) ** 2 for x in list_time_per_token]
+    ) / len(list_time_per_token)
     avg_time_per_token_perf_count = sum(list_time_per_token_perf_count) / len(list_time_per_token_perf_count)
+    var_time_per_token_perf_count = sum(
+        [(x - avg_time_per_token_perf_count) ** 2 for x in list_time_per_token_perf_count]
+    ) / len(list_time_per_token_perf_count)
+
     avg_ppl = sum(list_ppl) / len(list_ppl)
+
+    # --- Save Detailed Results to JSON if path is provided ---
+    if hasattr(args, 'timing_output_path') and args.timing_output_path:
+        print(f"INFO: Saving detailed timing results to {args.timing_output_path}")
+        results_to_save = {
+            "nb_runs": max_trials,
+            "list_ppl": list_ppl,
+            "avg_ppl": avg_ppl,
+            "cuda_timing_ms": {
+                "list_total_time": list_total_inference_time,
+                "list_token_time": list_time_per_token,
+                "avg_total_time": avg_total_inference_time,
+                "var_total_time": var_total_inference_time,
+                "avg_token_time": avg_time_per_token,
+                "var_token_time": var_time_per_token,
+            },
+            "cpu_timing_ms": {
+                "avg_total_time": avg_total_inference_time_perf_count,
+                "var_total_time": var_total_inference_time_perf_count,
+                "avg_token_time": avg_time_per_token_perf_count,
+                "var_token_time": var_time_per_token_perf_count,
+            }
+        }
+        try:
+            with open(args.timing_output_path, 'w') as f:
+                json.dump(results_to_save, f, indent=4, default=lambda o: '<not serializable>')
+            print(f"INFO: Successfully saved timing results to {args.timing_output_path}")
+        except Exception as e:
+            print(f"ERROR: Could not save timing results to {args.timing_output_path}: {e}")
+    # --- End JSON Saving ---
+
     print(f"Average Total Inference Time: {avg_total_inference_time:.2f} ms")
     print(f"Average Total Inference Time (CPU): {avg_total_inference_time_perf_count:.2f} ms")
+    print(f"Variance Total Inference Time: {var_total_inference_time:.2f} ms")
+    print()
     print(f"Average Time per Token: {avg_time_per_token:.4f} ms/token")
     print(f"Average Time per Token (CPU): {avg_time_per_token_perf_count:.4f} ms/token")
+    print(f"Variance Time per Token: {var_time_per_token:.4f} ms/token")
+    print()
     print(f"Average PPL: {avg_ppl:.3f}")
     return avg_ppl

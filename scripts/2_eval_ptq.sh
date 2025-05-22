@@ -68,6 +68,9 @@ while [[ $# -gt 0 ]]; do
     --nb_eval_runs) 
       if [[ -n "$2" ]] && [[ "$2" != --* ]] && [[ "$2" =~ ^[0-9]+$ ]]; then NB_EVAL_RUNS="$2"; shift 2;
       else echo "ERROR: --nb_eval_runs requires an integer value." >&2; exit 1; fi ;;
+    --timing_output_path) 
+      if [[ -n "$2" ]] && [[ "$2" != --* ]]; then TIMING_OUTPUT_PATH="$2"; shift 2;
+      else echo "ERROR: --timing_output_path requires a path." >&2; exit 1; fi ;;
     *) # Unknown option passed to shell script
       echo "Warning: Unknown shell script option ignored: $1"
       shift
@@ -105,6 +108,8 @@ fi
 PYTHON_ARGS+=" --access_token \"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\"" # Quote token
 
 PYTHON_ARGS+=" --nb_eval_runs $NB_EVAL_RUNS" # Number of times to perform evaluation (for inference time measurements)
+
+PYTHON_ARGS+=" --timing_output_path \"$TIMING_OUTPUT_PATH\"" # Path to save timing output
 
 
 # --- Logic for Hadamard Flags passed to ptq.py ---
@@ -152,30 +157,59 @@ echo "-----------------------------------------------------------------------"
 # Use eval to correctly handle arguments with spaces or quotes within PYTHON_ARGS
 eval torchrun --nnodes=1 --nproc_per_node=1 ptq.py $PYTHON_ARGS
 
-# --- Example Usage ---
-# torchrun --nnodes=1 --nproc_per_node=1 ptq.py \
-# --input_model $1 \
-# --do_train False \
-# --do_eval True \
-# --per_device_eval_batch_size 4 \
-# --model_max_length 2048 \
-# --fp16 False \
-# --bf16 True \
-# --save_safetensors False \
-# --w_bits $2 \
-# --a_bits $3 \
-# --k_bits $4 \
-# --v_bits $4 \
-# --w_clip \
-# --a_asym \
-# --k_asym \
-# --v_asym \
-# --k_groupsize 128 \
-# --v_groupsize 128 \
-# --rotate \
-# #--hadamard_online
-# #--online_r3_only \
-# #--sparse_had \
-# #--selective_had_layers_path "llama2_7b_rotate_layers_p5.json" \
-# --optimized_rotation_path "optimized_rotation/R.bin" \
-# --access_token "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"
+
+
+
+
+
+
+# ------------------------------------------------------------- #
+
+
+
+# OUTPUT_BASE_DIR_FOR_RUN="./ptq_eval_outputs/${MODEL_BASENAME_FOR_PATH}/${RUN_CONFIG_SUFFIX}"
+# SAVED_QUANTIZED_MODEL_PATH="./saved_model" # Where ptq.py will save the HF model
+# LM_EVAL_RESULTS_FILE="./lm_eval_harness_results.json"
+
+
+
+
+# # --- LM Evaluation Harness ---
+# echo "-----------------------------------------------------------------------"
+# echo "Starting LM Evaluation Harness..."
+# echo "Evaluating model from: $SAVED_QUANTIZED_MODEL_PATH"
+# echo "-----------------------------------------------------------------------"
+
+
+
+# LM_EVAL_HARNESS_PATH="./lm-evaluation-harness/lm_eval/__main__.py" # Path to the main.py file of the LM Evaluation Harness
+
+# if [ ! -f "$LM_EVAL_HARNESS_PATH" ]; then
+#     echo "ERROR: LM Evaluation Harness main.py not found at $LM_EVAL_HARNESS_PATH"
+#     exit 1
+# fi
+
+# PYTHON_ARGS_LMEVAL=""
+# PYTHON_ARGS_LMEVAL+=" --model hf"
+# PYTHON_ARGS_LMEVAL+=" --model_args pretrained=\"$SAVED_QUANTIZED_MODEL_PATH\",trust_remote_code=True,torch_dtype=\"auto\"" # auto or bfloat16
+# PYTHON_ARGS_LMEVAL+=" --tasks arc_easy" #,arc_challenge,boolq,piqa,siqa,hellaswag,openbookqa,winogrande" # Your task list
+# PYTHON_ARGS_LMEVAL+=" --device cuda:0"
+# PYTHON_ARGS_LMEVAL+=" --batch_size auto" # Start with 1 if 'auto' has issues, e.g. --batch_size 1
+# PYTHON_ARGS_LMEVAL+=" --num_fewshot 0"
+# PYTHON_ARGS_LMEVAL+=" --output_path \"$LM_EVAL_RESULTS_FILE\""
+
+# echo "Executing LM Evaluation Harness with arguments:"
+# echo "$PYTHON_ARGS_LMEVAL"
+# echo "-----------------------------------------------------------------------"
+
+# python $LM_EVAL_HARNESS_PATH $PYTHON_ARGS_LMEVAL
+
+# if [ $? -eq 0 ]; then
+#   echo "LM Evaluation Harness finished successfully. Results at: $LM_EVAL_RESULTS_FILE"
+# else
+#   echo "ERROR: LM Evaluation Harness execution failed."
+# fi
+# echo "-----------------------------------------------------------------------"
+# echo "Full evaluation run for configuration $RUN_CONFIG_SUFFIX complete."
+# echo "Outputs stored in $OUTPUT_BASE_DIR_FOR_RUN"
+# echo "-----------------------------------------------------------------------"

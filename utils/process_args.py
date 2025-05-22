@@ -283,6 +283,12 @@ def parser_gen():
         default=1,
         help="Number of evaluation runs",
     )
+    parser.add_argument(
+        "--timing_output_path",
+        type=str,
+        default=None,
+        help="Path to save the detailed timing and PPL results in JSON format."
+    )
     
 
     args, unknown = parser.parse_known_args()

@@ -23,6 +23,7 @@ from utils.data_utils import CustomJsonDataset
 from utils.hadamard_utils import random_hadamard_matrix
 from utils.process_args import process_args_ptq
 from utils.utils import get_local_rank, get_logger, pt_fsdp_state_dict
+import time
 
 log: Logger = get_logger("spinquant")
 
@@ -46,6 +47,8 @@ def train() -> None:
 
     log.info("the rank is {}".format(local_rank))
     torch.distributed.barrier()
+
+    start_time = time.perf_counter()
 
     config = transformers.AutoConfig.from_pretrained(
         model_args.input_model, token=model_args.access_token
@@ -136,12 +139,19 @@ def train() -> None:
     }
     if local_rank == 0:
         os.makedirs(model_args.output_rotation_path, exist_ok=True)
-        path = os.path.join(model_args.output_rotation_path, "R.bin")
+        path = os.path.join(model_args.output_rotation_path, "R_4_8_8.bin")
         torch.save(
             R_dict,
             path,
         )
     dist.barrier()
+
+    end_time = time.perf_counter()
+
+    print(
+        f"Training time: {end_time - start_time:.2f} seconds, "
+        f"or {(end_time - start_time) / 60:.2f} minutes"
+    )
 
 
 if __name__ == "__main__":
