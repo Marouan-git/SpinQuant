@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import os
-import random # For dummy data generation
+import random
 
 # Define the list of files and their desired labels for the x-axis
 file_configurations = [

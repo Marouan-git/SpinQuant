@@ -2,3 +2,4 @@ optimized_rotation/
 .ipynb_checkpoints
 __pycache__
 ./*/__pycache__
+*.png

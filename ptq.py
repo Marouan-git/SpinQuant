@@ -47,6 +47,7 @@ class QuantizedLMWrapper(HFLM):
             device=device,
             batch_size=batch_size,
             tokenizer=tokenizer_obj,
+            trust_remote_code=True,
         )
 
 # --- End HFLM Wrapper ---
@@ -80,45 +81,13 @@ def train() -> None:
     model.cuda()
     current_target_device = model.device
 
-    model = ptq_model(ptq_args, model, model_args)
-    model.seqlen = training_args.model_max_length
+    # model = ptq_model(ptq_args, model, model_args)
+    # model.seqlen = training_args.model_max_length
 
-    model.to(current_target_device)
+    # model.to(current_target_device)
 
     task_manager = lm_eval.tasks.TaskManager()
 
-    # if local_rank == 0:
-    #     log.info("Model PTQ completed {}".format(model))
-
-    #     # --- Add code to save the model and tokenizer ---
-    #     quantized_model_output_dir = os.path.join("saved_model", "quantized_model")
-    #     os.makedirs(quantized_model_output_dir, exist_ok=True)
-    #     log.info(f"Saving quantized model and tokenizer to {quantized_model_output_dir}")
-
-    #     try:
-    #         # Save the model
-    #         model.save_pretrained(quantized_model_output_dir)
-    #         print("Quantized model saved successfully.")
-
-    #         # Load and save the tokenizer
-    #         log.info("Loading tokenizer to save alongside quantized model...")
-    #         tokenizer = LlamaTokenizerFast.from_pretrained(
-    #             pretrained_model_name_or_path=model_args.input_model, # Use original model path for tokenizer
-    #             cache_dir=training_args.cache_dir,
-    #             model_max_length=training_args.model_max_length,
-    #             padding_side="right",
-    #             use_fast=True,
-    #             add_eos_token=False,
-    #             add_bos_token=False,
-    #             token=model_args.access_token,
-    #         )
-    #         tokenizer.save_pretrained(quantized_model_output_dir)
-    #         print("Tokenizer saved successfully.")
-    #         print("Quantized model and tokenizer are ready for LM Evaluation Harness.")
-
-    #     except Exception as e:
-    #         print(f"Error saving quantized model or tokenizer: {e}")
-    #     # --- End of saving code ---
 
     if local_rank == 0:
         log.info("Model PTQ completed {}".format(model))
@@ -133,61 +102,136 @@ def train() -> None:
         add_bos_token=False,
         token=model_args.access_token,
     )
-    print("Complete tokenizer loading...")
-    model.config.use_cache = False
+    # print("Complete tokenizer loading...")
+    # model.config.use_cache = False
 
-    print(f"Instantiating LM Eval Harness wrapper with model on {model.device} and tokenizer.")
-    eval_model = QuantizedLMWrapper(
-        model_obj=model,
-        tokenizer_obj=tokenizer,
-        device=model.device.type, # Pass "cuda" or "cpu"
-    )
-    # You can also pass batch_size to simple_evaluate, which might take precedence.
+    # print(f"Instantiating LM Eval Harness wrapper with model on {model.device} and tokenizer.")
+    # eval_model = QuantizedLMWrapper(
+    #     model_obj=model,
+    #     tokenizer_obj=tokenizer,
+    #     device=model.device.type,
+    # )
 
     # 2. Define tasks and parameters
-    # Example task list, customize as needed
-    tasks_to_run = ["piqa"]#["arc_easy", "arc_challenge", "boolq", "piqa", "siqa", "hellaswag", "openbookqa", "winogrande"]
+    tasks_to_run = ["winogrande", "hellaswag"]#["arc_easy", "arc_challenge", "boolq", "piqa", "social_iqa", "openbookqa", "winogrande", "hellaswag"]
     num_fewshot = 0
-    # limit = 10 # Optional: for quick testing on a few samples per task
 
     log.info(f"Running lm_eval.simple_evaluate on tasks: {tasks_to_run} with {num_fewshot}-shot")
-    results = lm_eval.simple_evaluate(
-        model=eval_model,
-        tasks=tasks_to_run,
-        num_fewshot=num_fewshot,
-        device=model.device.type,   # Ensure this matches the model's device
-        task_manager=task_manager,
-        # limit=limit, # Uncomment for quick testing
-        # log_samples=True # Set to False to avoid too much log spam for full runs
-    )
+
+    nb_evals = ptq_args.nb_eval_runs
+
+    task_results = {task: {} for task in tasks_to_run}
+
+    base_seed = 1234
+
+    if local_rank == 0:
+
+        for task in tasks_to_run:
+            print()
+            print(f"Running lm_eval.simple_evaluate on task: {task}")
+            print()
+            accuracies = []
+            stderrs = []
+            for i in range(nb_evals):
+                ptq_args.seed = base_seed + i
+                torch.manual_seed(base_seed + i)
+                model = LlamaForCausalLM.from_pretrained(
+                    pretrained_model_name_or_path=model_args.input_model,
+                    config=config,
+                    torch_dtype=dtype,
+                    token=model_args.access_token,
+                )
+                if process_word_embeddings:
+                    model.lm_head.weight.data = model.model.embed_tokens.weight.data.clone()
+                model.cuda()
+                current_target_device = model.device
+                model = ptq_model(ptq_args, model, model_args)
+                model.seqlen = training_args.model_max_length
+                model.to(current_target_device)
+                print("Complete tokenizer loading...")
+                model.config.use_cache = False
+
+                print(f"Instantiating LM Eval Harness wrapper with model on {model.device} and tokenizer.")
+                eval_model = QuantizedLMWrapper(
+                    model_obj=model,
+                    tokenizer_obj=tokenizer,
+                    device=model.device.type,
+                )
+                print(f"Running evaluation {i + 1}/{nb_evals} for task: {task}")
+                print()
+                results = lm_eval.simple_evaluate(
+                    model=eval_model,
+                    tasks=[task],
+                    num_fewshot=num_fewshot,
+                    device=model.device.type,  
+                    task_manager=task_manager,
+                )
+        
+                # Extract accuracy and stderr from results
+                if "acc_norm,none" in results["results"][task].keys():
+                    accuracies.append(results["results"][task]["acc_norm,none"])
+                    stderrs.append(results["results"][task]["acc_stderr,none"])
+                else:
+                    accuracies.append(results["results"][task]["acc,none"])
+                    stderrs.append(results["results"][task]["acc_stderr,none"])
+            
+            # Compute variance for accuracies
+            accuracies_var = torch.var(torch.tensor(accuracies))
 
 
-    # Construct a filename based on your PTQ args for uniqueness
-    # This is a simplified example; you might want to make it more descriptive
-    # based on w_bits, a_bits, hadamard_flags etc. from ptq_args
-    w_bits = getattr(ptq_args, "w_bits", "unknown")
-    a_bits = getattr(ptq_args, "a_bits", "unknown")
-    # You'd construct a more detailed suffix based on all relevant ptq_args
-    results_filepath = f"lm_eval_results_w{w_bits}_a{a_bits}.json"
-    
+            # Store the acuracies and stderrs for the task
+            task_results[task]["accuracies"] = accuracies
+            task_results[task]["stderrs"] = stderrs
+            # Store the mean and stderr for the task
+            task_results[task]["mean_accuracy"] = sum(accuracies) / len(accuracies)
+            task_results[task]["stderr"] = sum(stderrs) / len(stderrs)
+            # Store the variance for the task
+            task_results[task]["variance"] = accuracies_var.item()
+            # Store nb of evals
+            task_results[task]["nb_evals"] = nb_evals
+
+            # Construct a filename based on your PTQ args for uniqueness
+            w_bits = getattr(ptq_args, "w_bits", "unknown")
+            a_bits = getattr(ptq_args, "a_bits", "unknown")
+            had_config = getattr(ptq_args, "hadamard_online", "no_had")
+            if had_config:
+                had_config = "had"
+            else:
+                had_config = "no_had"
+            optimized_rotation = getattr(ptq_args, "optimized_rotation_path", None)
+            if optimized_rotation:
+                optimized_rotation = "offline_learned"
+            else:
+                optimized_rotation = "offline_hadamard"
+
+            results_task_filepath = f"lm_eval_results_{task}_w{w_bits}_a{a_bits}_{had_config}_{optimized_rotation}.json"
+            try:
+                with open(results_task_filepath, "w") as f:
+                    json.dump(task_results[task], f, indent=2, default=handle_non_serializable, ensure_ascii=False)
+                log.info(f"LM Evaluation Harness results for {task} saved to: {results_task_filepath}")
+            except Exception as e:
+                log.error(f"Failed to save LM Evaluation Harness results: {e}")
 
 
-    try:
-        with open(results_filepath, "w") as f:
-            json.dump(results, f, indent=2, default=handle_non_serializable, ensure_ascii=False)
-        log.info(f"LM Evaluation Harness results saved to: {results_filepath}")
-    except Exception as e:
-        log.error(f"Failed to save LM Evaluation Harness results: {e}")
 
-    testloader = data_utils.get_wikitext2(
-        seed=ptq_args.seed,
-        seqlen=2048,
-        tokenizer=tokenizer,
-        eval_mode=True,
-    )
+        results_filepath = f"lm_eval_results_w{w_bits}_a{a_bits}_{had_config}_{optimized_rotation}.json"
 
-    dataset_ppl = eval_utils.evaluator(model, testloader, utils.DEV, ptq_args)
-    log.info("wiki2 ppl is: {}".format(dataset_ppl))
+        try:
+            with open(results_filepath, "w") as f:
+                json.dump(task_results, f, indent=2, default=handle_non_serializable, ensure_ascii=False)
+            log.info(f"LM Evaluation Harness results saved to: {results_filepath}")
+        except Exception as e:
+            log.error(f"Failed to save LM Evaluation Harness results: {e}")
+
+    # testloader = data_utils.get_wikitext2(
+    #     seed=ptq_args.seed,
+    #     seqlen=2048,
+    #     tokenizer=tokenizer,
+    #     eval_mode=True,
+    # )
+
+    # dataset_ppl = eval_utils.evaluator(model, testloader, utils.DEV, ptq_args)
+    # log.info("wiki2 ppl is: {}".format(dataset_ppl))
     dist.barrier()
 
 
