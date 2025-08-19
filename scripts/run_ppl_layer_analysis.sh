@@ -1,0 +1,19 @@
+torchrun --nnodes=1 --nproc_per_node=1 run_ppl_layer_analysis.py \
+    --input_model meta-llama/Llama-2-7b-hf \
+    --w_bits 4 \
+    --a_bits 4 \
+    --k_bits 4 \
+    --v_bits 4 \
+    --nb_eval_runs 1 \
+    --optimized_rotation_path optimized_rotation/R_16_4_4.bin \
+    --do_train False \
+    --do_eval True \
+    --per_device_eval_batch_size 4 \
+    --model_max_length 2048 \
+    --fp16 False \
+    --bf16 True \
+    --save_safetensors False \
+    --w_clip --a_asym --k_asym --v_asym --k_groupsize 128 --v_groupsize 128 \
+    --rotate \
+    --access_token "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" \
+    --load_qmodel_path "quantized_weights_offline_rotated.pt"
