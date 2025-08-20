@@ -92,10 +92,12 @@ class ActQuantizer(torch.nn.Module):
 
     def __init__(self) -> None:
         super(ActQuantizer, self).__init__()
+        self.register_buffer("minq", torch.tensor(0))
         self.register_buffer("maxq", torch.tensor(0))
         self.register_buffer("scale", torch.zeros(1))
         self.register_buffer("zero", torch.zeros(1))
         self.bits = 16
+        self.block_bits = None # For block-wise mixed-precision
 
     def free(self) -> None:
         self.zero = None
@@ -103,8 +105,23 @@ class ActQuantizer(torch.nn.Module):
 
     def forward(self, x):
         x_dtype = x.dtype
-        if self.bits == 16:
+        if self.bits == 16 and self.block_bits is None:
             return x
+        if self.block_bits is not None:
+            init_shape = x.shape
+            # Reshape input tensor into blocks, matching the shape of parameters
+            reshaped_x = x.reshape(-1, self.num_blocks, self.groupsize)
+
+            # Quantize: round(x/scale + zero)
+            # self.scale, self.zero, and self.maxq have shape (tokens, num_blocks, 1)
+            # and will broadcast correctly.
+            q = torch.clamp(torch.round(reshaped_x / self.scale + self.zero), self.minq, self.maxq)
+
+            # Dequantize: (q - zero) * scale
+            dq_x = ((q - self.zero) * self.scale).reshape(init_shape)
+
+            # Use STE for backward pass
+            return (dq_x - x).detach() + x
         elif self.sym:
             return STEQuantize.apply(x, self.scale, self.maxq).to(x_dtype)
         return AsymSTEQuantize.apply(x, self.scale, self.zero, self.maxq).to(x_dtype)
@@ -117,13 +134,17 @@ class ActQuantizer(torch.nn.Module):
             return asym_quant(x, self.scale, self.zero, self.maxq)
 
     def configure(
-        self, bits: int, groupsize: int = -1, sym: bool = False, clip_ratio: float = 1.0
+        self, bits: int, groupsize: int = -1, sym: bool = False, clip_ratio: float = 1.0, block_bits: list = None
     ) -> None:
         _, self.maxq = get_minq_maxq(bits, sym)
         self.bits = bits
         self.groupsize = groupsize
         self.sym = sym
         self.clip_ratio = clip_ratio
+        self.block_bits = block_bits
+        if self.block_bits is None:
+            # Original behavior
+            _, self.maxq = get_minq_maxq(bits, sym)
         assert (
             self.clip_ratio <= 1 and self.clip_ratio > 0
         ), "Clip ratio should be in (0, 1]"
@@ -153,7 +174,7 @@ class ActQuantizer(torch.nn.Module):
         self.zero = self.zero.repeat(1, 1, 1, self.groupsize).reshape(init_shape)
 
     def find_params(self, x) -> None:
-        if self.bits == 16:
+        if self.bits == 16 and self.block_bits is None:
             return
 
         dev = x.device
@@ -162,9 +183,36 @@ class ActQuantizer(torch.nn.Module):
         init_shape = x.shape
 
         if self.groupsize > 0:
-            # group-wise per-token quantization
-            self.find_params_per_token_groupwise(x)
-            # utils.cleanup_memory(verbos=False)
+            if self.block_bits is not None:
+                self.num_blocks = x.shape[-1] // self.groupsize
+                if len(self.block_bits) != self.num_blocks:
+                    raise ValueError(f"Length of block_bits ({len(self.block_bits)}) does not match number of blocks ({self.num_blocks})")
+
+                # Reshape for block-wise analysis
+                reshaped_x = x.reshape(-1, self.num_blocks, self.groupsize)
+
+                xmax = torch.amax(reshaped_x, dim=2, keepdim=True) * self.clip_ratio
+                xmin = torch.amin(reshaped_x, dim=2, keepdim=True) * self.clip_ratio
+
+                # Create per-block minq and maxq tensors
+                minq_list, maxq_list = zip(*[get_minq_maxq(b, self.sym) for b in self.block_bits])
+                self.minq = torch.tensor(minq_list, device=dev, dtype=torch.float32).reshape(1, -1, 1)
+                self.maxq = torch.tensor(maxq_list, device=dev, dtype=torch.float32).reshape(1, -1, 1)
+
+                if self.sym:
+                    xmax = torch.maximum(torch.abs(xmin), xmax)
+                    self.scale = xmax / self.maxq
+                    self.zero = torch.zeros_like(self.scale)
+                else:
+                    self.scale = (xmax - xmin) / (self.maxq - self.minq)
+                    self.zero = torch.round(-xmin / self.scale) + self.minq
+                
+                # Keep parameters in the per-block shape (tokens, num_blocks, 1)
+                return
+            else:
+                # group-wise per-token quantization
+                self.find_params_per_token_groupwise(x)
+                # utils.cleanup_memory(verbos=False)
             return
 
         reshaped_x = x.reshape((-1, x.shape[-1]))

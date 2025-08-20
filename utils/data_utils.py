@@ -14,6 +14,7 @@ from typing import Any, Dict
 import datasets
 import torch
 import transformers
+import os
 
 
 def get_wikitext2(nsamples=128, seed=0, seqlen=2048, model="", tokenizer=None, eval_mode=False):
@@ -41,6 +42,81 @@ def get_wikitext2(nsamples=128, seed=0, seqlen=2048, model="", tokenizer=None, e
             tar[:, :-1] = -100
             trainloader.append((inp, tar))
         return trainloader
+
+def get_c4(nsamples=128, seed=0, seqlen=2048, model="", tokenizer=None, eval_mode=False):
+    """
+    Get a loader for the C4 dataset.
+    
+    Args:
+        nsamples (int): Number of samples to generate.
+        seed (int): Random seed for reproducibility.
+        seqlen (int): The sequence length of each sample.
+        model (str): The model name to load the tokenizer from.
+        tokenizer: An already-initialized tokenizer.
+        eval_mode (bool): If True, returns the validation set; otherwise, returns a training loader.
+        
+    Returns:
+        If eval_mode is True, a tokenized tensor of the validation data.
+        If eval_mode is False, a list of (input, target) tensor pairs for training.
+    """
+    # Initialize the tokenizer if not provided
+    if tokenizer is None:
+        tokenizer = transformers.AutoTokenizer.from_pretrained(model, use_fast=False)
+
+    local_dataset_path = "./datasets/c4_en"  # Path where the C4 dataset is stored locally
+    # --- Evaluation Mode ---
+    if eval_mode:
+        # Load a subset of the C4 validation set using streaming
+        # valdata = datasets.load_dataset(
+        #     'allenai/c4', 'en', split='validation', streaming=True
+        # )
+        # Load the validation set from the local disk
+        valdata = datasets.load_from_disk(os.path.join(local_dataset_path, 'validation'))
+        val_text = "\n\n".join(valdata["text"])
+        
+        # Take the first 10,000 documents for a manageable validation set
+        #val_dataset_head = valdata.take(10000)
+        #val_text = "\n\n".join([d['text'] for d in val_dataset_head])
+        
+        valenc = tokenizer(val_text, return_tensors="pt")
+        return valenc
+        
+    # --- Training Mode ---
+    else:
+        # Load a subset of the C4 training set using streaming
+        traindata = datasets.load_dataset(
+            'allenai/c4', 'en', split='train', streaming=True
+        )
+
+        # Create a large text buffer by taking a fixed number of documents from the stream.
+        # This avoids loading the entire massive dataset. 50,000 documents provide
+        # a sufficiently large and diverse text corpus to sample from.
+        dataset_head = traindata.take(50000) 
+        text_samples = [d['text'] for d in dataset_head]
+        
+        # Concatenate and tokenize the text samples
+        train_text = "\n\n".join(text_samples)
+        trainenc = tokenizer(train_text, return_tensors="pt")
+
+        # Generate training samples with the same logic as get_wikitext2
+        random.seed(seed)
+        trainloader = []
+        for _ in range(nsamples):
+            # Select a random starting point in the tokenized text
+            i = random.randint(0, trainenc.input_ids.shape[1] - seqlen - 1)
+            j = i + seqlen
+            
+            # Extract the input sequence
+            inp = trainenc.input_ids[:, i:j]
+            
+            # Create the target tensor, masking all but the last token
+            tar = inp.clone()
+            tar[:, :-1] = -100
+            
+            trainloader.append((inp, tar))
+            
+        return trainloader
+
 
 
 class CustomJsonDataset(torch.utils.data.IterableDataset):

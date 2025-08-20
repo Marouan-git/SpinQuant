@@ -64,7 +64,18 @@ def parser_gen():
     # Note: These control the ONLINE R3/R4 hadamard parts.
     # --rotate flag controls the base offline R1/R2 rotations.
 
-    hadamard_group = parser.add_argument_group('Online Hadamard Rotation Control')
+    parser.add_argument(
+        "--run_analysis",
+        action="store_true",
+        help="Run activations analysis on the weights quantized model."
+    )
+
+    parser.add_argument(
+        "--quantize_only_module",
+        type=str,
+        default=None,
+        help="The full name of a single module to quantize (e.g., 'model.layers.15.mlp.down_proj'). All others will remain in full precision."
+    )
 
     parser.add_argument(
         "--hadamard_online",
@@ -96,6 +107,12 @@ def parser_gen():
         default=None,
         help="Path to JSON file containing list of layer indices for selective online Hadamard rotation."
     )'''
+    parser.add_argument(
+        "--probability_threshold",
+        type=float,
+        default=0.95,
+        help="The cumulative probability threshold for discovering the optimal k."
+    )
     parser.add_argument(
         "--rotate_mode", type=str, default="hadamard", choices=["hadamard", "random"]
     )
@@ -153,6 +170,12 @@ def parser_gen():
         help="Groupsize for weight quantization. Note that this should be the same as a_groupsize",
     )
     parser.add_argument(
+        "--block_size",
+        type=int,
+        default=128,
+        help="The block size to use for block-wise mixed-precision quantization (e.g., 128, 64, 32)."
+    )
+    parser.add_argument(
         "--w_asym",
         action=argparse.BooleanOptionalAction,
         default=False,
@@ -196,6 +219,19 @@ def parser_gen():
         action=argparse.BooleanOptionalAction,
         default=False,
         help="Use INT8 for Down Projection! If this set, both weights and activations of this layer will be in INT8",
+    )
+
+    parser.add_argument(
+    "--top_k",
+    type=int,
+    default=20,
+    help="The number of top-k tokens to consider for the JSD/Jaccard analysis."
+    )
+    parser.add_argument(
+        "--beta",
+        type=float,
+        default=0.5,
+        help="The weighting factor for the hybrid score (weight for confidence shift)."
     )
 
     # KV-Cache Quantization Arguments
@@ -289,7 +325,31 @@ def parser_gen():
         default=None,
         help="Path to save the detailed timing and PPL results in JSON format."
     )
-    
+    parser.add_argument(
+        "--exclude_activations_layers", # Renamed for clarity
+        type=int,
+        nargs="+",
+        default=None,
+        help="A list of layer indices to EXCLUDE from activation quantization. If not provided, all activations are quantized."
+    )
+    parser.add_argument(
+        "--high_precision_bits",
+        type=int,
+        default=16,
+        help="The bit-width to use for layers specified as high precision."
+    )
+    parser.add_argument(
+        "--mixed_precision_config",
+        type=str,
+        default=None,
+        help="Path to a JSON file specifying which layer IDs should be in high precision."
+    )
+    parser.add_argument(
+        "--eval_dataset",
+        type=str,
+        default="wikitext2",
+        help="The dataset to use for evaluation. Options: 'wikitext2', 'c4'."
+    )
 
     args, unknown = parser.parse_known_args()
 

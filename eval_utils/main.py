@@ -13,6 +13,7 @@ import os
 import json # Ensure json is imported
 import torch
 import transformers
+import re
 
 from eval_utils import gptq_utils, rotation_utils
 from utils import data_utils, fuse_norm_utils, hadamard_utils, quant_utils, utils
@@ -29,6 +30,48 @@ def ptq_model(args, model, model_args=None): # args is ptq_args from process_arg
     """
     transformers.set_seed(args.seed)
     model.eval()
+
+    # Load mixed-precision configuration if provided
+    high_precision_layers = []
+    per_layer_bits_config = None
+    per_module_bits_config = None
+    per_block_bits_config = None
+
+    if args.mixed_precision_config:
+        print(f"INFO: Loading mixed-precision config from {args.mixed_precision_config}")
+        with open(args.mixed_precision_config, 'r') as f:
+            config_data = json.load(f)
+
+        # Check which format the JSON is in, prioritizing module-wise
+        first_key = next(iter(config_data), None)
+        if isinstance(first_key, str) and ".block_" in first_key:
+            # --- Handle Block-wise Config ---
+            print(f"INFO: Using BLOCK-WISE config.")
+            per_block_bits_config = {}
+            for key, bits in config_data.items():
+                # e.g., key = "model.layers.0.self_attn.q_proj.block_0"
+                parts = key.rsplit('.block_', 1)
+                module_name = parts[0]
+                if module_name not in per_block_bits_config:
+                    per_block_bits_config[module_name] = []
+                per_block_bits_config[module_name].append((int(parts[1]), bits))
+            # Sort blocks by index to ensure correct order
+            for module_name in per_block_bits_config:
+                per_block_bits_config[module_name].sort()
+                per_block_bits_config[module_name] = [bits for _, bits in per_block_bits_config[module_name]]
+        elif isinstance(first_key, str) and first_key.startswith("model.layers"):
+            # --- Handle Module-wise Config (New Format) ---
+            per_module_bits_config = config_data
+            print(f"INFO: Using MODULE-WISE config. Per-module bits defined.")
+        elif "layers_in_high_precision" in config_data:
+            # --- Handle Binary Config (Old Format) ---
+            high_precision_layers = config_data.get("layers_in_high_precision", [])
+            print(f"INFO: Using BINARY config. Layers in {args.high_precision_bits}-bit: {high_precision_layers}")
+        else:
+            # --- Handle Multi-Choice Config (New Format) ---
+            # Convert string keys from JSON (e.g., "0") to integer keys
+            per_layer_bits_config = {int(k): v for k, v in config_data.items()}
+            print(f"INFO: Using MULTI-CHOICE config. Per-layer bits defined.")
 
     # --- Determine Hadamard Mode based on args ---
     # These flags should be mutually exclusive (enforced by shell script or arg parser)
@@ -189,18 +232,73 @@ def ptq_model(args, model, model_args=None): # args is ptq_args from process_arg
         head_dim = model_dim // num_heads
 
         for name in qlayers_act:
+            
+            # If we are in single-module mode, only configure the target module.
+            if args.quantize_only_module is not None:
+                if name != args.quantize_only_module:
+                    continue # Skip configuration for all other modules
+            
+                    
             # Default settings for this layer
             layer_input_bits = args.a_bits
             layer_groupsize = args.a_groupsize
             layer_a_sym = not (args.a_asym)
             layer_a_clip = args.a_clip_ratio
 
+            layer_idx = None
+            # Use regex to find the layer number from the layer name string
+            match = re.search(r'model\.layers\.(\d+)\.', name)
+            if match:
+                layer_idx = int(match.group(1))
+            
+            v_input_bits = args.v_bits
+            # Priority 1: Block-wise config
+            if per_block_bits_config and name in per_block_bits_config:
+                block_bits_list = per_block_bits_config[name]
+                qlayers_act[name].quantizer.configure(
+                    bits=args.a_bits, # Base bits, not strictly needed but good for consistency
+                    groupsize=args.block_size,
+                    sym=not (args.a_asym),
+                    clip_ratio=args.a_clip_ratio,
+                    block_bits=block_bits_list # Pass the list of bits
+                )
+                # For v_proj, block-wise config on main quantizer takes precedence
+                if "v_proj" in name:
+                     qlayers_act[name].out_quantizer.configure(bits=16) # Disable out_quantizer
+                continue # Skip other logic for this module
+            elif per_module_bits_config:
+                layer_input_bits = per_module_bits_config.get(name, args.a_bits)
+                v_input_bits = per_module_bits_config.get(name, args.v_bits)
+            else:
+                if per_layer_bits_config and layer_idx is not None:
+                    # Use multi-choice config if available
+                    layer_input_bits = per_layer_bits_config.get(layer_idx, args.a_bits)
+                    v_input_bits = per_layer_bits_config.get(layer_idx, args.v_bits)
+                elif high_precision_layers and layer_idx is not None:
+                    # Fallback to binary config
+                    if layer_idx in high_precision_layers:
+                        layer_input_bits = args.high_precision_bits
+                        v_input_bits = args.high_precision_bits
+            
+            # If a list is provided, check if the current layer is in it.
+            # We also ensure layer_idx is not None to handle non-layer modules like lm_head.
+            if args.exclude_activations_layers is not None and layer_idx is not None and layer_idx in args.exclude_activations_layers:
+                print(f"Excluding layer {layer_idx} from activation quantization: {name}") if layer_idx is not None else None
+                # If this layer is not in the selective list, skip its quantization setup.
+                if hasattr(qlayers_act[name], 'quantizer'):
+                 qlayers_act[name].quantizer.configure(
+                     bits=16, groupsize=layer_groupsize,
+                     sym=layer_a_sym, clip_ratio=layer_a_clip,
+                 )
+                continue
+
             # Specific overrides based on layer type
             if "v_proj" in name and args.v_bits < 16: # Set the v_proj precision
                 v_groupsize = head_dim # Group by head dim for V cache
+                
                 if hasattr(qlayers_act[name], 'out_quantizer'): # Check if out_quantizer exists
                      qlayers_act[name].out_quantizer.configure(
-                         bits=args.v_bits, groupsize=v_groupsize,
+                         bits=v_input_bits, groupsize=v_groupsize,
                          sym=not (args.v_asym), clip_ratio=args.v_clip_ratio,
                      )
                 else: print(f"Warning: {name} expected out_quantizer for V-cache but not found.")
@@ -229,7 +327,7 @@ def ptq_model(args, model, model_args=None): # args is ptq_args from process_arg
 
     # --- Setup R3 (QKRotationWrapper for K-cache) ---
     # Apply R3 if k_bits < 16 AND (global had OR selective had OR r3_only mode is active)
-    apply_r3_wrapper = (args.k_bits < 16) and (is_global_had_mode or is_selective_had_mode or is_r3_only_mode)
+    apply_r3_wrapper = (args.k_bits < 16) and (is_global_had_mode or is_selective_had_mode or is_r3_only_mode or args.mixed_precision_config)
 
     if apply_r3_wrapper:
         print(f"INFO: Applying R3 QK Rotation Wrappers (k_bits={args.k_bits} and an online Had mode active).")
@@ -244,30 +342,43 @@ def ptq_model(args, model, model_args=None): # args is ptq_args from process_arg
                 "k_clip_ratio": args.k_clip_ratio,
             }
             for layer_idx, layer in enumerate(layers):
-                 if is_selective_had_mode:
-                     if layer_idx in selective_had_layers:
-                         # Selective mode: Apply R3 only to selected layers
-                         rotation_utils.add_qk_rotation_wrapper_after_function_call_in_forward(
-                             layer.self_attn, rope_function_name, config=model.config, **k_quant_config,
-                         )
-                     else:
+                if args.exclude_activations_layers is not None and layer_idx in args.exclude_activations_layers:
+                    continue
+                if per_module_bits_config:
+                    k_proj_name = f"model.layers.{layer_idx}.self_attn.k_proj"
+                    current_k_bits = per_module_bits_config.get(k_proj_name, args.k_bits)
+                    k_quant_config["k_bits"] = current_k_bits
+                elif per_layer_bits_config:
+                    current_k_bits = per_layer_bits_config.get(layer_idx, args.k_bits)
+                    k_quant_config["k_bits"] = current_k_bits
+                elif high_precision_layers:
+                    if layer_idx in high_precision_layers:
+                        current_k_bits = args.high_precision_bits
+                        k_quant_config["k_bits"] = current_k_bits
+                
+                if is_selective_had_mode:
+                    if layer_idx in selective_had_layers:
+                        # Selective mode: Apply R3 only to selected layers
+                        rotation_utils.add_qk_rotation_wrapper_after_function_call_in_forward(
+                            layer.self_attn, rope_function_name, config=model.config, **k_quant_config,
+                        )
+                    else:
                         print(f"Warning: R3 not applied to layer {layer_idx} (not in selective list).")
-                 elif is_global_had_mode:
-                     # Global mode: Apply R3 to all layers
-                     rotation_utils.add_qk_rotation_wrapper_after_function_call_in_forward(
-                         layer.self_attn, rope_function_name, config=model.config, **k_quant_config,
-                     )
-                 elif is_r3_only_mode:
+                elif is_global_had_mode:
+                    # Global mode: Apply R3 to all layers
                     rotation_utils.add_qk_rotation_wrapper_after_function_call_in_forward(
                         layer.self_attn, rope_function_name, config=model.config, **k_quant_config,
                     )
-                 else:
+                elif is_r3_only_mode:
+                    rotation_utils.add_qk_rotation_wrapper_after_function_call_in_forward(
+                        layer.self_attn, rope_function_name, config=model.config, **k_quant_config,
+                    )
+                else:
                     print(f"Warning: R3 not applied to layer {layer_idx} (not in selective list).")
             print("INFO: R3 QK wrappers applied.")
-    elif args.k_bits < 16:
+    else:
         # k_bits < 16 but no online had mode active -> R3 skipped
         print(f"INFO: Skipping R3 QK Rotation Wrappers (k_bits={args.k_bits}, but no online Had mode selected).")
-    # --- End R3 Setup ---
-
+    
     print("INFO: ptq_model function finished.")
     return model

@@ -1,11 +1,11 @@
-# SpinQuant \- Mixed-Precision Analysis Fork
+# SpinQuant - Mixed-Precision Analysis Fork
 
-This repository is a fork of the original \[SpinQuant\](https://github.com/mit-han-lab/spinquant) implementation. While it retains the core functionality for learning optimal rotation matrices for LLM quantization, this version has been extended to support advanced analysis and optimization of **mixed-precision quantization**.
+This repository is a fork of the original [SpinQuant](https://github.com/mit-han-lab/spinquant) implementation. While it retains the core functionality for learning optimal rotation matrices for LLM quantization, this version has been extended to support advanced analysis and optimization of **mixed-precision quantization**.
 
 The primary additions include a suite of tools to:  
-1\.  Analyze the sensitivity of different model components (layers, modules, or blocks) using various metrics.  
-2\.  Generate optimized mixed-precision configurations based on a sensitivity metric and a computational budget.  
-3\.  Evaluate the performance (Perplexity and Zero-Shot Accuracy) of these mixed-precision configurations.
+1.  Analyze the sensitivity of different model components (layers, modules, or blocks) using various metrics.  
+2.  Generate optimized mixed-precision configurations based on a sensitivity metric and a computational budget.  
+3.  Evaluate the performance (Perplexity and Zero-Shot Accuracy) of these mixed-precision configurations.
 
 Other sensitivity metrics like the fisher information, the max-median ratio of activation magnitudes or the FGMP metric (from the [FGMP paper](https://arxiv.org/abs/2504.14152)) can be computed using the [LMAnalyser tool](https://github.com/Marouan-git/LMAnalyser).
 

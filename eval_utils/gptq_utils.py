@@ -171,7 +171,7 @@ class GPTQ:
 
 
 @torch.no_grad()
-def gptq_fwrd(model, dataloader, dev, args):
+def gptq_fwrd(model, dataloader, dev, args, custom_layers=None):
     """
     From GPTQ repo
     """

@@ -202,6 +202,8 @@ class QKRotationWrapper(torch.nn.Module):
         self.func = func
         self.k_quantizer = quant_utils.ActQuantizer()
         self.k_bits = 16
+        # Pop the new argument to control rotation, defaulting to False
+        self.apply_rotation = kwargs.pop("apply_rotation", False)
         if kwargs is not None:
             assert kwargs["k_groupsize"] in [
                 -1,
@@ -220,34 +222,40 @@ class QKRotationWrapper(torch.nn.Module):
 
     def forward(self, *args, **kwargs):
         q, k = self.func(*args, **kwargs)
+
+        # If no quantization or rotation is needed, return immediately
+        if self.k_bits >= 16 and not self.apply_rotation:
+            return q, k
+        
         dtype = q.dtype
         
         # R3 rotation
-
-        q = (HadamardTransform.apply(q.float()) / math.sqrt(q.shape[-1])).to(dtype)
-        k = (HadamardTransform.apply(k.float()) / math.sqrt(k.shape[-1])).to(dtype)
+        if self.apply_rotation:
+            q = (HadamardTransform.apply(q.float()) / math.sqrt(q.shape[-1])).to(dtype)
+            k = (HadamardTransform.apply(k.float()) / math.sqrt(k.shape[-1])).to(dtype)
             
         (bsz, num_heads, seq_len, head_dim) = k.shape
 
-        if self.k_groupsize == -1:  # token-wise quantization
-            token_wise_k = k.transpose(1, 2).reshape(-1, num_heads * head_dim)
-            self.k_quantizer.find_params(token_wise_k)
-            k = (
-                self.k_quantizer(token_wise_k)
-                .reshape((bsz, seq_len, num_heads, head_dim))
-                .transpose(1, 2)
-                .to(q)
-            )
-        else:  # head-wise quantization
-            per_head_k = k.view(-1, head_dim)
-            self.k_quantizer.find_params(per_head_k)
-            k = (
-                self.k_quantizer(per_head_k)
-                .reshape((bsz, num_heads, seq_len, head_dim))
-                .to(q)
-            )
+        if self.k_bits < 16:
+            if self.k_groupsize == -1:  # token-wise quantization
+                token_wise_k = k.transpose(1, 2).reshape(-1, num_heads * head_dim)
+                self.k_quantizer.find_params(token_wise_k)
+                k = (
+                    self.k_quantizer(token_wise_k)
+                    .reshape((bsz, seq_len, num_heads, head_dim))
+                    .transpose(1, 2)
+                    .to(q)
+                )
+            else:  # head-wise quantization
+                per_head_k = k.reshape(-1, head_dim)
+                self.k_quantizer.find_params(per_head_k)
+                k = (
+                    self.k_quantizer(per_head_k)
+                    .reshape((bsz, num_heads, seq_len, head_dim))
+                    .to(q)
+                )
 
-        self.k_quantizer.free()
+            self.k_quantizer.free()
 
         return q, k
 

@@ -11,6 +11,7 @@
 import logging
 import os
 import json
+import re
 
 import torch
 import torch.cuda
@@ -19,9 +20,141 @@ from tqdm import tqdm
 
 from utils import model_utils
 
+def calculate_per_layer_bops(model, args):
+    """
+    Calculates the total computational cost for each of the 32 layers in the model,
+    aggregating the costs of all linear sub-modules within each layer, based on its quantization
+    configuration. The cost is modeled as Bit-Operations (BOPs), where for each
+    linear layer, BOPs = base_macs * weight_bits * activation_bits.
+
+    Returns:
+        dict: A dictionary mapping layer index (0-31) to its total BOPs value.
+    """
+    # Initialize a dictionary to hold BOPs for each layer
+    num_layers = model.config.num_hidden_layers
+    layer_bops = {i: 0 for i in range(num_layers)}
+    
+    w_bits = args.w_bits if args.w_bits < 16 else 16
+
+    for name, module in model.named_modules():
+        if isinstance(module, torch.nn.Linear):
+            # Find which of the 32 layers this linear module belongs to
+            match = re.search(r'model\.layers\.(\d+)\.', name)
+            if match:
+                layer_idx = int(match.group(1))
+
+                # --- Calculate BOPs for this specific nn.Linear module ---
+                base_macs = module.in_features * module.out_features
+                
+                # Determine activation bits for this layer's input
+                a_bits = args.a_bits if args.a_bits < 16 else 16
+                if (
+                    hasattr(args, 'exclude_activations_layers') and
+                    args.exclude_activations_layers is not None and
+                    layer_idx in args.exclude_activations_layers
+                ):
+                    a_bits = 16
+                elif "down_proj" in name and hasattr(args, 'int8_down_proj') and args.int8_down_proj:
+                    a_bits = 8
+                
+                module_bops = base_macs * w_bits * a_bits
+                
+                # Accumulate the BOPs for the corresponding main layer
+                if layer_idx in layer_bops:
+                    layer_bops[layer_idx] += module_bops
+    
+    return layer_bops
+
+@torch.no_grad()
+def get_logits_for_analysis(model, testloader, dev, args):
+    """
+    Performs an efficient, layer-by-layer forward pass on a set of samples
+    to get the final logits. Mimics the core logic of the main evaluator.
+    """
+    model.eval()
+    use_cache = model.config.use_cache
+    model.config.use_cache = False
+
+    layers = model.model.layers
+    model.model.embed_tokens = model.model.embed_tokens.to(dev)
+    layers[0] = layers[0].to(dev)
+
+    seq_len = model.seqlen
+    input_ids = testloader.input_ids
+    nsamples = input_ids.numel() // seq_len
+    input_ids = input_ids[:, : nsamples * seq_len].view(nsamples, seq_len).to(dev)
+
+    batch_size = args.bsz
+    nbatches = (nsamples + batch_size - 1) // batch_size
+    
+    inps = [0] * nbatches
+    cache = {"i": 0, "attention_mask": None, "position_ids": None}
+
+    class Catcher(torch.nn.Module):
+        def __init__(self, module): super().__init__(); self.module = module
+        def forward(self, inp, **kwargs):
+            inps[cache["i"]] = inp
+            cache["i"] += 1
+            cache["attention_mask"] = kwargs["attention_mask"]
+            cache["position_ids"] = kwargs["position_ids"]
+            raise ValueError
+
+    layers[0] = Catcher(layers[0])
+    for i in range(0, nsamples, batch_size):
+        batch = input_ids[i:i+batch_size]
+        try: model(batch)
+        except ValueError: pass
+    layers[0] = layers[0].module
+    layers[0] = layers[0].cpu()
+    model.model.embed_tokens = model.model.embed_tokens.cpu()
+    torch.cuda.empty_cache()
+
+    outs = [0] * nbatches
+    attention_mask = cache["attention_mask"]
+    position_ids = cache["position_ids"]
+
+    for i in tqdm(range(len(layers)), desc=" (Forward Pass) Layers"):
+        layer = layers[i].to(dev)
+        for j in range(nbatches):
+            outs[j] = layer(inps[j], attention_mask=attention_mask, position_ids=position_ids)[0]
+        layers[i] = layer.cpu()
+        del layer
+        torch.cuda.empty_cache()
+        inps, outs = outs, inps
+
+    if model.model.norm is not None:
+        model.model.norm = model.model.norm.to(dev)
+    model.lm_head = model.lm_head.to(dev)
+
+    all_logits = []
+    for i in range(nbatches):
+        hidden_states = inps[i]
+        if model.model.norm is not None:
+            hidden_states = model.model.norm(hidden_states)
+        logits = model.lm_head(hidden_states)
+        all_logits.append(logits.cpu()) # Move to CPU to save VRAM
+
+    model.config.use_cache = use_cache
+    return all_logits
 
 @torch.no_grad()
 def evaluator(model, testenc, dev, args):
+    # --- Calculate and Report Per-Layer Computational Cost ---
+    # per_layer_bops = calculate_per_layer_bops(model, args)
+    
+    # print("--- Per-Layer Computational Cost (TBOPs) ---")
+    # for i, bops in per_layer_bops.items():
+    #     # Convert to Tera-Bit-Operations for readability
+    #     tbops = bops / 1e12
+    #     print(f"Layer {i:02d}: {tbops:.4f} TBOPs")
+    # print("---------------------------------------------")
+    
+    # # You can also calculate the total
+    # total_bops = sum(per_layer_bops.values())
+    # total_tbops = total_bops / 1e12
+    # print(f"Total Computational Cost: {total_tbops:.4f} TBOPs")
+    # # ---
+
     model.eval()
 
     print("INFO: nb of evaluation runs: ", args.nb_eval_runs)
@@ -261,4 +394,257 @@ def evaluator(model, testenc, dev, args):
     print(f"Variance Time per Token: {var_time_per_token:.4f} ms/token")
     print()
     print(f"Average PPL: {avg_ppl:.3f}")
-    return avg_ppl
+    return avg_ppl, avg_time_per_token
+
+# @torch.no_grad()
+# def evaluator(model, testenc, dev, args):
+#     model.eval()
+
+#     print("INFO: nb of evaluation runs: ", args.nb_eval_runs)
+#     max_trials = args.nb_eval_runs
+
+#     # --- Result lists are shared by both evaluation paths ---
+#     list_ppl = []
+#     list_total_inference_time = []
+#     list_time_per_token = []
+#     list_total_inference_time_perf_count = []
+#     list_time_per_token_perf_count = []
+
+#     for _ in range(max_trials):
+#         use_cache = model.config.use_cache
+#         model.config.use_cache = False
+#         layers = model.model.layers
+#         seq_len = model.seqlen
+#         loss_fct = torch.nn.CrossEntropyLoss(reduction="none")
+
+#         # Prepare the dataset into batches
+#         input_ids_full = testenc.input_ids
+#         nsamples = input_ids_full.numel() // seq_len
+#         total_tokens_processed = nsamples * seq_len
+#         print(f"INFO: Evaluator using seqlen={seq_len}, found {nsamples} samples ({total_tokens_processed} tokens).")
+#         input_ids = input_ids_full[:, : nsamples * seq_len].view(nsamples, seq_len)
+#         input_ids_batched = [input_ids[i : i + args.bsz] for i in range(0, nsamples, args.bsz)]
+#         nbatches = len(input_ids_batched)
+
+#         # ===================================================================================
+#         # START of dataset-specific logic
+#         # ===================================================================================
+        
+#         # This path uses the layer-by-layer pipeline, efficient for smaller datasets
+#         # where the full activation buffers fit in memory.
+#         if args.eval_dataset == 'wikitext2':
+#             print("INFO: Using memory-intensive layer-by-layer evaluation for wikitext2.")
+            
+#             # --- This is your original logic for wikitext2 ---
+#             model.model.embed_tokens = model.model.embed_tokens.to(dev)
+#             layers[0] = layers[0].to(dev)
+
+#             dtype = next(iter(model.parameters())).dtype
+#             inps = [0] * nbatches
+#             cache = {"i": 0, "attention_mask": None, "position_ids": None}
+
+#             class Catcher(torch.nn.Module):
+#                 def __init__(self, module):
+#                     super().__init__()
+#                     self.module = module
+#                 def forward(self, inp, **kwargs):
+#                     inps[cache["i"]] = inp
+#                     cache["i"] += 1
+#                     cache["attention_mask"] = kwargs["attention_mask"]
+#                     cache["position_ids"] = kwargs["position_ids"]
+#                     raise ValueError
+
+#             layers[0] = Catcher(layers[0])
+#             for i in range(nbatches):
+#                 try:
+#                     model(input_ids_batched[i].to(dev))
+#                 except ValueError:
+#                     pass
+#             layers[0] = layers[0].module
+#             layers[0] = layers[0].cpu()
+#             model.model.embed_tokens = model.model.embed_tokens.cpu()
+            
+#             position_ids = cache["position_ids"]
+#             attention_mask = cache["attention_mask"]
+#             torch.cuda.empty_cache()
+#             outs = [0] * nbatches
+
+#             start_event = torch.cuda.Event(enable_timing=True)
+#             end_event = torch.cuda.Event(enable_timing=True)
+#             start_cpu = time.perf_counter()
+#             start_event.record()
+
+#             for i in tqdm(range(len(layers)), desc="(Eval) Layers"):
+#                 layer = layers[i].to(dev)
+#                 for j in range(nbatches):
+#                     outs[j] = layer(inps[j], attention_mask=attention_mask, position_ids=position_ids)[0]
+#                 layers[i] = layer.cpu()
+#                 del layer
+#                 torch.cuda.empty_cache()
+#                 inps, outs = outs, inps
+            
+#             if model.model.norm is not None:
+#                 model.model.norm = model.model.norm.to(dev)
+#             model.lm_head = model.lm_head.to(dev)
+
+#             nlls = []
+#             for i in range(nbatches):
+#                 hidden_states = inps[i]
+#                 if model.model.norm is not None:
+#                     hidden_states = model.model.norm(hidden_states)
+#                 lm_logits = model.lm_head(hidden_states)
+#                 shift_logits = lm_logits[:, :-1, :]
+#                 shift_labels = input_ids_batched[i][:, 1:]
+#                 loss = loss_fct(shift_logits.permute(0, 2, 1), shift_labels.to(dev))
+#                 neg_log_likelihood = loss.float().mean(dim=1)
+#                 nlls.append(neg_log_likelihood)
+            
+#             end_event.record()
+#             torch.cuda.synchronize()
+#             end_cpu = time.perf_counter()
+#             # --- End of original wikitext2 logic ---
+
+#         # This path uses the batch-by-batch pipeline, which is more memory-efficient
+#         # and necessary for large datasets like C4.
+#         elif args.eval_dataset == 'c4':
+#             print("INFO: Using memory-efficient batch-by-batch evaluation for C4.")
+            
+#             # --- This is the corrected logic for C4 ---
+#             model.model.embed_tokens = model.model.embed_tokens.to(dev)
+#             if model.model.norm is not None:
+#                 model.model.norm = model.model.norm.to(dev)
+#             model.lm_head = model.lm_head.to(dev)
+#             dtype = next(iter(model.parameters())).dtype
+            
+#             nlls = []
+            
+#             start_event = torch.cuda.Event(enable_timing=True)
+#             end_event = torch.cuda.Event(enable_timing=True)
+#             start_cpu = time.perf_counter()
+#             start_event.record()
+            
+#             for batch in tqdm(input_ids_batched, desc="(Eval) Batches"):
+#                 batch = batch.to(dev)
+#                 current_batch_size = batch.shape[0]
+
+#                 # --- FIX: Create the 4D causal mask with the correct dtype ---
+#                 causal_mask = torch.full(
+#                     (seq_len, seq_len), 
+#                     fill_value=torch.finfo(dtype).min, 
+#                     device=dev,
+#                     dtype=dtype  # This ensures the mask is bfloat16
+#                 )
+#                 causal_mask = torch.triu(causal_mask, diagonal=1)
+#                 causal_mask = causal_mask.unsqueeze(0).unsqueeze(0).expand(current_batch_size, 1, seq_len, seq_len)
+                
+#                 position_ids = torch.arange(0, seq_len, dtype=torch.long, device=dev).unsqueeze(0).expand(current_batch_size, -1)
+#                 # --- End of FIX ---
+
+#                 hidden_states = model.model.embed_tokens(batch)
+                
+#                 for layer in layers:
+#                     layer = layer.to(dev)
+#                     hidden_states = layer(hidden_states, attention_mask=causal_mask, position_ids=position_ids)[0]
+#                     layer = layer.cpu()
+
+#                 if model.model.norm is not None:
+#                     hidden_states = model.model.norm(hidden_states)
+                
+#                 lm_logits = model.lm_head(hidden_states)
+#                 shift_logits = lm_logits[:, :-1, :]
+#                 shift_labels = batch[:, 1:]
+#                 loss = loss_fct(shift_logits.permute(0, 2, 1), shift_labels)
+#                 neg_log_likelihood = loss.float().mean(dim=1)
+#                 nlls.append(neg_log_likelihood)
+            
+#             end_event.record()
+#             torch.cuda.synchronize()
+#             end_cpu = time.perf_counter()
+            
+#         else:
+#             raise ValueError(f"Unknown dataset '{args.eval_dataset}' specified for evaluator.")
+
+#         # ===================================================================================
+#         # END of dataset-specific logic
+#         # ===================================================================================
+
+#         # --- This final reporting part is shared ---
+#         ppl = torch.exp(torch.cat(nlls).mean())
+#         model.config.use_cache = use_cache
+#         logging.info(f"\n PPL for {args.eval_dataset}: {ppl.item():.3f}")
+
+#         total_inference_time_ms = start_event.elapsed_time(end_event)
+#         total_inference_time_ms_cpu = (end_cpu - start_cpu) * 1000
+
+#         if total_tokens_processed > 0:
+#             time_per_token_ms = total_inference_time_ms / total_tokens_processed
+#             time_per_token_ms_cpu = total_inference_time_ms_cpu / total_tokens_processed
+#             list_total_inference_time.append(total_inference_time_ms)
+#             list_total_inference_time_perf_count.append(total_inference_time_ms_cpu)
+#             list_time_per_token.append(time_per_token_ms)
+#             list_time_per_token_perf_count.append(time_per_token_ms_cpu)
+#             list_ppl.append(ppl.item())
+
+#     # --- Averaging and final printout is also shared ---
+#     avg_ppl = sum(list_ppl) / len(list_ppl)
+#     avg_time_per_token = sum(list_time_per_token) / len(list_time_per_token)
+
+#     avg_total_inference_time = sum(list_total_inference_time) / len(list_total_inference_time)
+#     var_total_inference_time = sum(
+#         [(x - avg_total_inference_time) ** 2 for x in list_total_inference_time]
+#     ) / len(list_total_inference_time)
+#     avg_total_inference_time_perf_count = sum(list_total_inference_time_perf_count) / len(list_total_inference_time_perf_count)
+#     var_total_inference_time_perf_count = sum(
+#         [(x - avg_total_inference_time_perf_count) ** 2 for x in list_total_inference_time_perf_count]
+#     ) / len(list_total_inference_time_perf_count)
+
+#     avg_time_per_token = sum(list_time_per_token) / len(list_time_per_token)
+#     var_time_per_token = sum(
+#         [(x - avg_time_per_token) ** 2 for x in list_time_per_token]
+#     ) / len(list_time_per_token)
+#     avg_time_per_token_perf_count = sum(list_time_per_token_perf_count) / len(list_time_per_token_perf_count)
+#     var_time_per_token_perf_count = sum(
+#         [(x - avg_time_per_token_perf_count) ** 2 for x in list_time_per_token_perf_count]
+#     ) / len(list_time_per_token_perf_count)
+
+#     # --- Save Detailed Results to JSON if path is provided ---
+#     if hasattr(args, 'timing_output_path') and args.timing_output_path:
+#         print(f"INFO: Saving detailed timing results to {args.timing_output_path}")
+#         results_to_save = {
+#             "nb_runs": max_trials,
+#             "list_ppl": list_ppl,
+#             "avg_ppl": avg_ppl,
+#             "cuda_timing_ms": {
+#                 "list_total_time": list_total_inference_time,
+#                 "list_token_time": list_time_per_token,
+#                 "avg_total_time": avg_total_inference_time,
+#                 "var_total_time": var_total_inference_time,
+#                 "avg_token_time": avg_time_per_token,
+#                 "var_token_time": var_time_per_token,
+#             },
+#             "cpu_timing_ms": {
+#                 "avg_total_time": avg_total_inference_time_perf_count,
+#                 "var_total_time": var_total_inference_time_perf_count,
+#                 "avg_token_time": avg_time_per_token_perf_count,
+#                 "var_token_time": var_time_per_token_perf_count,
+#             }
+#         }
+#         try:
+#             with open(args.timing_output_path, 'w') as f:
+#                 json.dump(results_to_save, f, indent=4, default=lambda o: '<not serializable>')
+#             print(f"INFO: Successfully saved timing results to {args.timing_output_path}")
+#         except Exception as e:
+#             print(f"ERROR: Could not save timing results to {args.timing_output_path}: {e}")
+#     # --- End JSON Saving ---
+
+#     print(f"Average Total Inference Time: {avg_total_inference_time:.2f} ms")
+#     print(f"Average Total Inference Time (CPU): {avg_total_inference_time_perf_count:.2f} ms")
+#     print(f"Variance Total Inference Time: {var_total_inference_time:.2f} ms")
+#     print()
+#     print(f"Average Time per Token: {avg_time_per_token:.4f} ms/token")
+#     print(f"Average Time per Token (CPU): {avg_time_per_token_perf_count:.4f} ms/token")
+#     print(f"Variance Time per Token: {var_time_per_token:.4f} ms/token")
+#     print()
+#     print(f"Average PPL: {avg_ppl:.3f}")
+
+#     return avg_ppl, avg_time_per_token
