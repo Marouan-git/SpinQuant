@@ -7,6 +7,8 @@ The primary additions include a suite of tools to:
 2\.  Generate optimized mixed-precision configurations based on a sensitivity metric and a computational budget.  
 3\.  Evaluate the performance (Perplexity and Zero-Shot Accuracy) of these mixed-precision configurations.
 
+Other sensitivity metrics like the fisher information, the max-median ratio of activation magnitudes or the FGMP metric (from the [FGMP paper](https://arxiv.org/abs/2504.14152)) can be computed using the [LMAnalyser tool](https://github.com/Marouan-git/LMAnalyser).
+
 ## Setup
 
 The setup is identical to the original SpinQuant repository. Please refer to the original [README](./README_SpinQuant.md) for instructions on installation and data preparation.
@@ -34,7 +36,7 @@ The first step is to run an analysis to determine how sensitive each module is t
 ```
 bash scripts/run_ppl_module_analysis.sh
 ```
-* **Output**: The script will generate a JSON file in the ppl\_analysis/ directory (e.g., llama2-7b\_ppl\_per\_module.json), containing the perplexity score for each module.
+* **Output**: The script will generate a JSON file containing the perplexity score for each module.
 
 #### **b. Top-k Tokens Stability Analysis**
 
@@ -45,7 +47,7 @@ bash scripts/run_ppl_module_analysis.sh
 ```
 bash scripts/run_topk_module_analysis.sh
 ```
-* **Output**: This will produce a JSON file in the topk\_analysis/ directory (e.g., llama2-7b\_topk20\_per\_module.json), containing the hybrid stability score for each module.
+* **Output**: This will produce a JSON file in the topk\_analysis/ directory containing the hybrid stability score for each module.
 
 ---
 
@@ -56,20 +58,16 @@ bash scripts/run_topk_module_analysis.sh
 **Command**:
 
 ```
-python optimize_quant_config_multi_greedy.py  
-    --model_path meta-llama/Llama-2-7b-hf  
-    --sensitivity_metric ppl 
+python optimize_quant_config_multi_greedy.py 
+    --metric ppl 
     --granularity module
-    --bops_file_path ./bops_results/bops_per_module_llama2-7b.json
-    --sensitivity_file_path ./ppl_analysis llama2-7b_ppl_per_module.json 
-    --output_dir ./mixed_precision_configs_ppl
+    --ppl-module-4bit ./path_to_ppl_4bits_analysis.json
+    --ppl-module-8bit ./path_to_ppl_8bits_analysis.json
+    --bops_module ./bops_results/bops_per_module_llama2-7b.json
+    --budget_multiplier 0.25
 ```
-* \--sensitivity\_metric: The name of the metric used (e.g., ppl, topk10, fgmp\_block32). This is for naming the output files.  
-* \--granularity: The level at which to apply precision (module, layer, or block).  
-* \--bops\_file\_path: Path to the pre-computed BOPs for each component.  
-* \--sensitivity\_file\_path: Path to the JSON file generated in step 1\.  
-* \--output\_dir: Directory where the resulting configuration files will be saved.  
-* **Output**: A set of JSON configuration files will be saved in the specified output directory, one for each budget point (e.g., best\_config\_0.25.json).
+
+* **Output**: A JSON file containing the optimized bit precision configuration for the specified budget.
 
 ---
 
@@ -101,7 +99,7 @@ bash scripts/run_mixed_precision_zero_shot_eval.sh
 ```
 
 * Similar to the perplexity script, you need to edit the config\_path variable inside the .sh file to point to the desired configuration.  
-* **Output**: The script will output the accuracy for each task and the mean accuracy. Results are saved to JSON files in the zero-shot\_results/ directory.
+* **Output**: The script will output the accuracy for each task and the mean accuracy. Results are saved to JSON files.
 
 ---
 
