@@ -1,6 +1,6 @@
 # SpinQuant - Mixed-Precision Analysis Fork
 
-This repository is a fork of the original [SpinQuant](https://github.com/mit-han-lab/spinquant) implementation. While it retains the core functionality for learning optimal rotation matrices for LLM quantization, this version has been extended to support advanced analysis and optimization of **mixed-precision quantization**.
+This repository is a fork of the original [SpinQuant](https://github.com/facebookresearch/SpinQuant) implementation. While it retains the core functionality for learning optimal rotation matrices for LLM quantization, this version has been extended to support advanced analysis and optimization of **mixed-precision quantization**.
 
 The primary additions include a suite of tools to:  
 1.  Analyze the sensitivity of different model components (layers, modules, or blocks) using various metrics.  
