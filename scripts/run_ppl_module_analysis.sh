@@ -1,5 +1,3 @@
-export MASTER_PORT=29504
-
 torchrun --nnodes=1 --rdzv_endpoint="localhost:29503" --nproc_per_node=1 run_ppl_module_analysis.py \
     --input_model meta-llama/Llama-3.2-3B \
     --w_bits 4 \
