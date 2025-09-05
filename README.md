@@ -59,7 +59,7 @@ bash scripts/run_topk_module_analysis.sh
 
 **What it does**: After generating a sensitivity file (from step 1, or from another tool like [LMAnalyser](https://github.com/Marouan-git/LMAnalyser)), this Python script uses the "Bang for the Buck" greedy algorithm to solve the Multiple-Choice Knapsack Problem. It takes the sensitivity scores, calculates different BOPs budgets, and generates the most optimal mixed-precision configuration for each budget.
 
-**Command**:
+**Command** (using ppl as a sensitivity metric):
 
 ```
 python optimize_quant_config_multi_greedy.py 
@@ -73,7 +73,50 @@ python optimize_quant_config_multi_greedy.py
 
 The bops file can be generated using the [LMAnalyser tool](https://github.com/Marouan-git/LMAnalyser).  
 
-The **ppl_4bits_analysis** and the **ppl_8bits_analysis** correspond respectively to the ppl degradation when the module is quantized to 4 bits and to 8 bits. We need both because the optimizer must compute the loss caused by upgrading the module from 16 bits to 8 bits but also from 8 bits to 4 bits.
+The **ppl_4bits_analysis** and the **ppl_8bits_analysis** correspond respectively to the ppl degradation when the module is quantized to 4 bits and to 8 bits. We need both because the optimizer must compute the loss caused by upgrading the module from 16 bits to 8 bits but also from 8 bits to 4 bits. These two arguments must always be specified, even when using other sensitivity metrics.  
+
+**Command** (using fgmp as a sensitivity metric):
+
+```
+python optimize_quant_config_multi_greedy.py 
+    --mode greedy 
+    --granularity block 
+    --metric fgmp 
+    --ppl-module-4bit 
+    sensitivity_results/llama3-8b/ppl_analysis_module_level_Meta-Llama-3-8B_w4_a4.json 
+    --ppl-module-8bit 
+    sensitivity_results/llama3-8b/ppl_analysis_module_level_Meta-Llama-3-8B_w4_a8.json 
+    --fgmp-block-4-8 
+    sensitivity_results/llama3-8b/fgmp_per_block_sensitivity_meta-llama_Meta-Llama-3-8B_8_4_bs32.json 
+    --fgmp-block-8-16 
+    sensitivity_results/llama3-8b/fgmp_per_block_sensitivity_meta-llama_Meta-Llama-3-8B_16_8_bs32.json 
+    --bops-block 
+    bops/llama3-8b/bops_per_block_meta-llama_Meta-Llama-3-8B_4bit_bs32.json 
+    --model_name Llama-3-8B 
+    --budget_multiplier 0.15
+```
+
+PPL and FGMP are the only metrics that require to model the 16-to-8 bits and 8-to-4 bits losses.
+
+**Command** (using top-k stability as a sensitivity metric):
+
+```
+python optimize_quant_config_multi_greedy.py 
+    --mode greedy 
+    --granularity module 
+    --metric topk 
+    --ppl-module-4bit 
+    sensitivity_results/llama3-8b/ppl_analysis_module_level_Meta-Llama-3-8B_w4_a4.json 
+    --ppl-module-8bit 
+    sensitivity_results/llama3-8b/ppl_analysis_module_level_Meta-Llama-3-8B_w4_a8.json 
+    --topk-module 
+    sensitivity_results/llama3-8b/topk_analysis_module_level_Meta-Llama-3-8B_w4_a4_k10.json
+    --bops-module 
+    bops/llama3-8b/bops_per_module_meta-llama_Meta-Llama-3-8B_4bit.json 
+    --model_name Llama-3-8B 
+    --budget_multiplier 0.15
+```
+
 
 * **Output**: A JSON file containing the optimized bit precision configuration for the specified budget.
 
