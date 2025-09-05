@@ -1,0 +1,1127 @@
+[
+    {
+        "module_name": "W4A16_baseline",
+        "perplexity": 6.58013916015625,
+        "inference_time_ms_per_token": 0.08805711725924878
+    },
+    {
+        "module_name": "model.layers.0.self_attn.q_proj",
+        "perplexity": 6.580114841461182,
+        "inference_time_ms_per_token": 0.08697011792067941
+    },
+    {
+        "module_name": "model.layers.0.self_attn.k_proj",
+        "perplexity": 6.580180644989014,
+        "inference_time_ms_per_token": 0.08659488934997125
+    },
+    {
+        "module_name": "model.layers.0.self_attn.v_proj",
+        "perplexity": 6.582569599151611,
+        "inference_time_ms_per_token": 0.08593659367121703
+    },
+    {
+        "module_name": "model.layers.0.self_attn.o_proj",
+        "perplexity": 6.582083225250244,
+        "inference_time_ms_per_token": 0.08660786878978106
+    },
+    {
+        "module_name": "model.layers.0.mlp.gate_proj",
+        "perplexity": 6.583672046661377,
+        "inference_time_ms_per_token": 0.08583585759426685
+    },
+    {
+        "module_name": "model.layers.0.mlp.up_proj",
+        "perplexity": 6.585010528564453,
+        "inference_time_ms_per_token": 0.0865576943607195
+    },
+    {
+        "module_name": "model.layers.0.mlp.down_proj",
+        "perplexity": 7.231772422790527,
+        "inference_time_ms_per_token": 0.08668959563505566
+    },
+    {
+        "module_name": "model.layers.1.self_attn.q_proj",
+        "perplexity": 6.5812201499938965,
+        "inference_time_ms_per_token": 0.08506271010595011
+    },
+    {
+        "module_name": "model.layers.1.self_attn.k_proj",
+        "perplexity": 6.580471038818359,
+        "inference_time_ms_per_token": 0.08546172304356352
+    },
+    {
+        "module_name": "model.layers.1.self_attn.v_proj",
+        "perplexity": 6.595808029174805,
+        "inference_time_ms_per_token": 0.08716397758916761
+    },
+    {
+        "module_name": "model.layers.1.self_attn.o_proj",
+        "perplexity": 6.5825371742248535,
+        "inference_time_ms_per_token": 0.08522955238396394
+    },
+    {
+        "module_name": "model.layers.1.mlp.gate_proj",
+        "perplexity": 6.584716796875,
+        "inference_time_ms_per_token": 0.0837401549021403
+    },
+    {
+        "module_name": "model.layers.1.mlp.up_proj",
+        "perplexity": 6.585830211639404,
+        "inference_time_ms_per_token": 0.08390336341046273
+    },
+    {
+        "module_name": "model.layers.1.mlp.down_proj",
+        "perplexity": 6.801379680633545,
+        "inference_time_ms_per_token": 0.08315056435605313
+    },
+    {
+        "module_name": "model.layers.2.self_attn.q_proj",
+        "perplexity": 6.580345153808594,
+        "inference_time_ms_per_token": 0.08284705412303302
+    },
+    {
+        "module_name": "model.layers.2.self_attn.k_proj",
+        "perplexity": 6.580979347229004,
+        "inference_time_ms_per_token": 0.08309957152562784
+    },
+    {
+        "module_name": "model.layers.2.self_attn.v_proj",
+        "perplexity": 6.578027725219727,
+        "inference_time_ms_per_token": 0.08327796104106497
+    },
+    {
+        "module_name": "model.layers.2.self_attn.o_proj",
+        "perplexity": 6.581279754638672,
+        "inference_time_ms_per_token": 0.08161125115468992
+    },
+    {
+        "module_name": "model.layers.2.mlp.gate_proj",
+        "perplexity": 6.586193561553955,
+        "inference_time_ms_per_token": 0.08396079185161184
+    },
+    {
+        "module_name": "model.layers.2.mlp.up_proj",
+        "perplexity": 6.584920406341553,
+        "inference_time_ms_per_token": 0.08031149451614272
+    },
+    {
+        "module_name": "model.layers.2.mlp.down_proj",
+        "perplexity": 6.7592854499816895,
+        "inference_time_ms_per_token": 0.0817916731462411
+    },
+    {
+        "module_name": "model.layers.3.self_attn.q_proj",
+        "perplexity": 6.580942630767822,
+        "inference_time_ms_per_token": 0.08191780333823347
+    },
+    {
+        "module_name": "model.layers.3.self_attn.k_proj",
+        "perplexity": 6.579998016357422,
+        "inference_time_ms_per_token": 0.08115848412750461
+    },
+    {
+        "module_name": "model.layers.3.self_attn.v_proj",
+        "perplexity": 6.593066215515137,
+        "inference_time_ms_per_token": 0.08184745633010324
+    },
+    {
+        "module_name": "model.layers.3.self_attn.o_proj",
+        "perplexity": 6.581234455108643,
+        "inference_time_ms_per_token": 0.08150159044468656
+    },
+    {
+        "module_name": "model.layers.3.mlp.gate_proj",
+        "perplexity": 6.584663391113281,
+        "inference_time_ms_per_token": 0.082657276315892
+    },
+    {
+        "module_name": "model.layers.3.mlp.up_proj",
+        "perplexity": 6.58573579788208,
+        "inference_time_ms_per_token": 0.08198407186684034
+    },
+    {
+        "module_name": "model.layers.3.mlp.down_proj",
+        "perplexity": 6.722123146057129,
+        "inference_time_ms_per_token": 0.08103677905197684
+    },
+    {
+        "module_name": "model.layers.4.self_attn.q_proj",
+        "perplexity": 6.58113431930542,
+        "inference_time_ms_per_token": 0.0817869132292186
+    },
+    {
+        "module_name": "model.layers.4.self_attn.k_proj",
+        "perplexity": 6.579566478729248,
+        "inference_time_ms_per_token": 0.08312019726908798
+    },
+    {
+        "module_name": "model.layers.4.self_attn.v_proj",
+        "perplexity": 6.584152698516846,
+        "inference_time_ms_per_token": 0.08179883415817368
+    },
+    {
+        "module_name": "model.layers.4.self_attn.o_proj",
+        "perplexity": 6.580633640289307,
+        "inference_time_ms_per_token": 0.0819446195101907
+    },
+    {
+        "module_name": "model.layers.4.mlp.gate_proj",
+        "perplexity": 6.584018230438232,
+        "inference_time_ms_per_token": 0.08216910835698987
+    },
+    {
+        "module_name": "model.layers.4.mlp.up_proj",
+        "perplexity": 6.586546897888184,
+        "inference_time_ms_per_token": 0.08157958882920285
+    },
+    {
+        "module_name": "model.layers.4.mlp.down_proj",
+        "perplexity": 6.720816135406494,
+        "inference_time_ms_per_token": 0.08256366574172433
+    },
+    {
+        "module_name": "model.layers.5.self_attn.q_proj",
+        "perplexity": 6.580653667449951,
+        "inference_time_ms_per_token": 0.08212687445025071
+    },
+    {
+        "module_name": "model.layers.5.self_attn.k_proj",
+        "perplexity": 6.580224514007568,
+        "inference_time_ms_per_token": 0.08157678867908234
+    },
+    {
+        "module_name": "model.layers.5.self_attn.v_proj",
+        "perplexity": 6.582268238067627,
+        "inference_time_ms_per_token": 0.08139816581780183
+    },
+    {
+        "module_name": "model.layers.5.self_attn.o_proj",
+        "perplexity": 6.581533908843994,
+        "inference_time_ms_per_token": 0.08139631088743819
+    },
+    {
+        "module_name": "model.layers.5.mlp.gate_proj",
+        "perplexity": 6.583980083465576,
+        "inference_time_ms_per_token": 0.08189602101102789
+    },
+    {
+        "module_name": "model.layers.5.mlp.up_proj",
+        "perplexity": 6.586714744567871,
+        "inference_time_ms_per_token": 0.08136264821316333
+    },
+    {
+        "module_name": "model.layers.5.mlp.down_proj",
+        "perplexity": 6.698505878448486,
+        "inference_time_ms_per_token": 0.08186138944422945
+    },
+    {
+        "module_name": "model.layers.6.self_attn.q_proj",
+        "perplexity": 6.580214023590088,
+        "inference_time_ms_per_token": 0.0816251369232827
+    },
+    {
+        "module_name": "model.layers.6.self_attn.k_proj",
+        "perplexity": 6.579918384552002,
+        "inference_time_ms_per_token": 0.08092175476939965
+    },
+    {
+        "module_name": "model.layers.6.self_attn.v_proj",
+        "perplexity": 6.583301544189453,
+        "inference_time_ms_per_token": 0.08157989995699402
+    },
+    {
+        "module_name": "model.layers.6.self_attn.o_proj",
+        "perplexity": 6.581644535064697,
+        "inference_time_ms_per_token": 0.08092816839826868
+    },
+    {
+        "module_name": "model.layers.6.mlp.gate_proj",
+        "perplexity": 6.583413600921631,
+        "inference_time_ms_per_token": 0.08211681183348311
+    },
+    {
+        "module_name": "model.layers.6.mlp.up_proj",
+        "perplexity": 6.585446357727051,
+        "inference_time_ms_per_token": 0.08250040027266699
+    },
+    {
+        "module_name": "model.layers.6.mlp.down_proj",
+        "perplexity": 6.671971321105957,
+        "inference_time_ms_per_token": 0.08088006871811887
+    },
+    {
+        "module_name": "model.layers.7.self_attn.q_proj",
+        "perplexity": 6.580236434936523,
+        "inference_time_ms_per_token": 0.08058284191375083
+    },
+    {
+        "module_name": "model.layers.7.self_attn.k_proj",
+        "perplexity": 6.580974102020264,
+        "inference_time_ms_per_token": 0.0825034185504237
+    },
+    {
+        "module_name": "model.layers.7.self_attn.v_proj",
+        "perplexity": 6.580620765686035,
+        "inference_time_ms_per_token": 0.08224797079749141
+    },
+    {
+        "module_name": "model.layers.7.self_attn.o_proj",
+        "perplexity": 6.581377029418945,
+        "inference_time_ms_per_token": 0.08134594538533096
+    },
+    {
+        "module_name": "model.layers.7.mlp.gate_proj",
+        "perplexity": 6.581904888153076,
+        "inference_time_ms_per_token": 0.08193328532766789
+    },
+    {
+        "module_name": "model.layers.7.mlp.up_proj",
+        "perplexity": 6.584893703460693,
+        "inference_time_ms_per_token": 0.08077674216412484
+    },
+    {
+        "module_name": "model.layers.7.mlp.down_proj",
+        "perplexity": 6.6447272300720215,
+        "inference_time_ms_per_token": 0.0818879283066337
+    },
+    {
+        "module_name": "model.layers.8.self_attn.q_proj",
+        "perplexity": 6.5812087059021,
+        "inference_time_ms_per_token": 0.08122657207732505
+    },
+    {
+        "module_name": "model.layers.8.self_attn.k_proj",
+        "perplexity": 6.580425262451172,
+        "inference_time_ms_per_token": 0.0819495992457613
+    },
+    {
+        "module_name": "model.layers.8.self_attn.v_proj",
+        "perplexity": 6.580844402313232,
+        "inference_time_ms_per_token": 0.08139969271125523
+    },
+    {
+        "module_name": "model.layers.8.self_attn.o_proj",
+        "perplexity": 6.581859111785889,
+        "inference_time_ms_per_token": 0.08112955093383789
+    },
+    {
+        "module_name": "model.layers.8.mlp.gate_proj",
+        "perplexity": 6.583134651184082,
+        "inference_time_ms_per_token": 0.0797684649203686
+    },
+    {
+        "module_name": "model.layers.8.mlp.up_proj",
+        "perplexity": 6.583861351013184,
+        "inference_time_ms_per_token": 0.08144467096802191
+    },
+    {
+        "module_name": "model.layers.8.mlp.down_proj",
+        "perplexity": 6.64080810546875,
+        "inference_time_ms_per_token": 0.07791623494303818
+    },
+    {
+        "module_name": "model.layers.9.self_attn.q_proj",
+        "perplexity": 6.580732822418213,
+        "inference_time_ms_per_token": 0.07925351122592358
+    },
+    {
+        "module_name": "model.layers.9.self_attn.k_proj",
+        "perplexity": 6.5806474685668945,
+        "inference_time_ms_per_token": 0.07911300151906114
+    },
+    {
+        "module_name": "model.layers.9.self_attn.v_proj",
+        "perplexity": 6.580610752105713,
+        "inference_time_ms_per_token": 0.07895984379112297
+    },
+    {
+        "module_name": "model.layers.9.self_attn.o_proj",
+        "perplexity": 6.581647872924805,
+        "inference_time_ms_per_token": 0.07940307745696805
+    },
+    {
+        "module_name": "model.layers.9.mlp.gate_proj",
+        "perplexity": 6.5819902420043945,
+        "inference_time_ms_per_token": 0.0810936190557818
+    },
+    {
+        "module_name": "model.layers.9.mlp.up_proj",
+        "perplexity": 6.58386754989624,
+        "inference_time_ms_per_token": 0.08055552185004485
+    },
+    {
+        "module_name": "model.layers.9.mlp.down_proj",
+        "perplexity": 6.646169185638428,
+        "inference_time_ms_per_token": 0.07991088535768766
+    },
+    {
+        "module_name": "model.layers.10.self_attn.q_proj",
+        "perplexity": 6.581106185913086,
+        "inference_time_ms_per_token": 0.0798491028183741
+    },
+    {
+        "module_name": "model.layers.10.self_attn.k_proj",
+        "perplexity": 6.58064603805542,
+        "inference_time_ms_per_token": 0.07974487500833281
+    },
+    {
+        "module_name": "model.layers.10.self_attn.v_proj",
+        "perplexity": 6.5802998542785645,
+        "inference_time_ms_per_token": 0.07975524368015587
+    },
+    {
+        "module_name": "model.layers.10.self_attn.o_proj",
+        "perplexity": 6.581153392791748,
+        "inference_time_ms_per_token": 0.08036052588875411
+    },
+    {
+        "module_name": "model.layers.10.mlp.gate_proj",
+        "perplexity": 6.580917835235596,
+        "inference_time_ms_per_token": 0.07933669056452758
+    },
+    {
+        "module_name": "model.layers.10.mlp.up_proj",
+        "perplexity": 6.584253787994385,
+        "inference_time_ms_per_token": 0.07950887274234852
+    },
+    {
+        "module_name": "model.layers.10.mlp.down_proj",
+        "perplexity": 6.636188983917236,
+        "inference_time_ms_per_token": 0.07973069163924414
+    },
+    {
+        "module_name": "model.layers.11.self_attn.q_proj",
+        "perplexity": 6.581017017364502,
+        "inference_time_ms_per_token": 0.07936234677091558
+    },
+    {
+        "module_name": "model.layers.11.self_attn.k_proj",
+        "perplexity": 6.581310749053955,
+        "inference_time_ms_per_token": 0.07922240182863059
+    },
+    {
+        "module_name": "model.layers.11.self_attn.v_proj",
+        "perplexity": 6.581157207489014,
+        "inference_time_ms_per_token": 0.07974802348630648
+    },
+    {
+        "module_name": "model.layers.11.self_attn.o_proj",
+        "perplexity": 6.581721782684326,
+        "inference_time_ms_per_token": 0.08021919270779224
+    },
+    {
+        "module_name": "model.layers.11.mlp.gate_proj",
+        "perplexity": 6.582425594329834,
+        "inference_time_ms_per_token": 0.07976128869022883
+    },
+    {
+        "module_name": "model.layers.11.mlp.up_proj",
+        "perplexity": 6.584575653076172,
+        "inference_time_ms_per_token": 0.07916482796905734
+    },
+    {
+        "module_name": "model.layers.11.mlp.down_proj",
+        "perplexity": 6.6408209800720215,
+        "inference_time_ms_per_token": 0.07869179028991266
+    },
+    {
+        "module_name": "model.layers.12.self_attn.q_proj",
+        "perplexity": 6.5807390213012695,
+        "inference_time_ms_per_token": 0.0794077291556284
+    },
+    {
+        "module_name": "model.layers.12.self_attn.k_proj",
+        "perplexity": 6.580257415771484,
+        "inference_time_ms_per_token": 0.07957108646419876
+    },
+    {
+        "module_name": "model.layers.12.self_attn.v_proj",
+        "perplexity": 6.582034111022949,
+        "inference_time_ms_per_token": 0.07902716913967268
+    },
+    {
+        "module_name": "model.layers.12.self_attn.o_proj",
+        "perplexity": 6.582459926605225,
+        "inference_time_ms_per_token": 0.07872803160484801
+    },
+    {
+        "module_name": "model.layers.12.mlp.gate_proj",
+        "perplexity": 6.5825090408325195,
+        "inference_time_ms_per_token": 0.07859230717868669
+    },
+    {
+        "module_name": "model.layers.12.mlp.up_proj",
+        "perplexity": 6.583619594573975,
+        "inference_time_ms_per_token": 0.07780725905235777
+    },
+    {
+        "module_name": "model.layers.12.mlp.down_proj",
+        "perplexity": 6.645702362060547,
+        "inference_time_ms_per_token": 0.07752396705302786
+    },
+    {
+        "module_name": "model.layers.13.self_attn.q_proj",
+        "perplexity": 6.580827236175537,
+        "inference_time_ms_per_token": 0.0770832748277813
+    },
+    {
+        "module_name": "model.layers.13.self_attn.k_proj",
+        "perplexity": 6.581305503845215,
+        "inference_time_ms_per_token": 0.07716295905147039
+    },
+    {
+        "module_name": "model.layers.13.self_attn.v_proj",
+        "perplexity": 6.5821685791015625,
+        "inference_time_ms_per_token": 0.07692051102929082
+    },
+    {
+        "module_name": "model.layers.13.self_attn.o_proj",
+        "perplexity": 6.583815574645996,
+        "inference_time_ms_per_token": 0.07701784330056914
+    },
+    {
+        "module_name": "model.layers.13.mlp.gate_proj",
+        "perplexity": 6.582932949066162,
+        "inference_time_ms_per_token": 0.07722087954798489
+    },
+    {
+        "module_name": "model.layers.13.mlp.up_proj",
+        "perplexity": 6.585221290588379,
+        "inference_time_ms_per_token": 0.07705389185154692
+    },
+    {
+        "module_name": "model.layers.13.mlp.down_proj",
+        "perplexity": 6.668107032775879,
+        "inference_time_ms_per_token": 0.07718534165240348
+    },
+    {
+        "module_name": "model.layers.14.self_attn.q_proj",
+        "perplexity": 6.581094741821289,
+        "inference_time_ms_per_token": 0.07670308681244546
+    },
+    {
+        "module_name": "model.layers.14.self_attn.k_proj",
+        "perplexity": 6.580761909484863,
+        "inference_time_ms_per_token": 0.07654032470486688
+    },
+    {
+        "module_name": "model.layers.14.self_attn.v_proj",
+        "perplexity": 6.58206033706665,
+        "inference_time_ms_per_token": 0.07776882293376516
+    },
+    {
+        "module_name": "model.layers.14.self_attn.o_proj",
+        "perplexity": 6.58236026763916,
+        "inference_time_ms_per_token": 0.07797625555214308
+    },
+    {
+        "module_name": "model.layers.14.mlp.gate_proj",
+        "perplexity": 6.583540916442871,
+        "inference_time_ms_per_token": 0.0773772009721039
+    },
+    {
+        "module_name": "model.layers.14.mlp.up_proj",
+        "perplexity": 6.585872650146484,
+        "inference_time_ms_per_token": 0.07764510229124245
+    },
+    {
+        "module_name": "model.layers.14.mlp.down_proj",
+        "perplexity": 6.684490203857422,
+        "inference_time_ms_per_token": 0.07764820173277077
+    },
+    {
+        "module_name": "model.layers.15.self_attn.q_proj",
+        "perplexity": 6.580915927886963,
+        "inference_time_ms_per_token": 0.07668514116436032
+    },
+    {
+        "module_name": "model.layers.15.self_attn.k_proj",
+        "perplexity": 6.580573558807373,
+        "inference_time_ms_per_token": 0.07632008681060574
+    },
+    {
+        "module_name": "model.layers.15.self_attn.v_proj",
+        "perplexity": 6.580522537231445,
+        "inference_time_ms_per_token": 0.07649913070895148
+    },
+    {
+        "module_name": "model.layers.15.self_attn.o_proj",
+        "perplexity": 6.583261966705322,
+        "inference_time_ms_per_token": 0.07623908367562801
+    },
+    {
+        "module_name": "model.layers.15.mlp.gate_proj",
+        "perplexity": 6.583635330200195,
+        "inference_time_ms_per_token": 0.07607494854757972
+    },
+    {
+        "module_name": "model.layers.15.mlp.up_proj",
+        "perplexity": 6.58652400970459,
+        "inference_time_ms_per_token": 0.07615576737315942
+    },
+    {
+        "module_name": "model.layers.15.mlp.down_proj",
+        "perplexity": 6.733939170837402,
+        "inference_time_ms_per_token": 0.07697102533164599
+    },
+    {
+        "module_name": "model.layers.16.self_attn.q_proj",
+        "perplexity": 6.581026077270508,
+        "inference_time_ms_per_token": 0.07650075398438366
+    },
+    {
+        "module_name": "model.layers.16.self_attn.k_proj",
+        "perplexity": 6.580442905426025,
+        "inference_time_ms_per_token": 0.076320396247485
+    },
+    {
+        "module_name": "model.layers.16.self_attn.v_proj",
+        "perplexity": 6.5814313888549805,
+        "inference_time_ms_per_token": 0.07589879103586183
+    },
+    {
+        "module_name": "model.layers.16.self_attn.o_proj",
+        "perplexity": 6.582991123199463,
+        "inference_time_ms_per_token": 0.07627421406143946
+    },
+    {
+        "module_name": "model.layers.16.mlp.gate_proj",
+        "perplexity": 6.583209037780762,
+        "inference_time_ms_per_token": 0.07638061300237128
+    },
+    {
+        "module_name": "model.layers.16.mlp.up_proj",
+        "perplexity": 6.586658477783203,
+        "inference_time_ms_per_token": 0.07683096878917504
+    },
+    {
+        "module_name": "model.layers.16.mlp.down_proj",
+        "perplexity": 6.743129253387451,
+        "inference_time_ms_per_token": 0.07665032021542813
+    },
+    {
+        "module_name": "model.layers.17.self_attn.q_proj",
+        "perplexity": 6.580898284912109,
+        "inference_time_ms_per_token": 0.07740062010203692
+    },
+    {
+        "module_name": "model.layers.17.self_attn.k_proj",
+        "perplexity": 6.5798420906066895,
+        "inference_time_ms_per_token": 0.07741393941514035
+    },
+    {
+        "module_name": "model.layers.17.self_attn.v_proj",
+        "perplexity": 6.582247257232666,
+        "inference_time_ms_per_token": 0.07585329705096305
+    },
+    {
+        "module_name": "model.layers.17.self_attn.o_proj",
+        "perplexity": 6.582247257232666,
+        "inference_time_ms_per_token": 0.0755994607370796
+    },
+    {
+        "module_name": "model.layers.17.mlp.gate_proj",
+        "perplexity": 6.5834431648254395,
+        "inference_time_ms_per_token": 0.07559698862386934
+    },
+    {
+        "module_name": "model.layers.17.mlp.up_proj",
+        "perplexity": 6.586589336395264,
+        "inference_time_ms_per_token": 0.07596785802367731
+    },
+    {
+        "module_name": "model.layers.17.mlp.down_proj",
+        "perplexity": 6.756276607513428,
+        "inference_time_ms_per_token": 0.07568897930442864
+    },
+    {
+        "module_name": "model.layers.18.self_attn.q_proj",
+        "perplexity": 6.5811872482299805,
+        "inference_time_ms_per_token": 0.07513985058940048
+    },
+    {
+        "module_name": "model.layers.18.self_attn.k_proj",
+        "perplexity": 6.580322742462158,
+        "inference_time_ms_per_token": 0.07550552550782548
+    },
+    {
+        "module_name": "model.layers.18.self_attn.v_proj",
+        "perplexity": 6.585056304931641,
+        "inference_time_ms_per_token": 0.07541270966225481
+    },
+    {
+        "module_name": "model.layers.18.self_attn.o_proj",
+        "perplexity": 6.5812602043151855,
+        "inference_time_ms_per_token": 0.07511508042085255
+    },
+    {
+        "module_name": "model.layers.18.mlp.gate_proj",
+        "perplexity": 6.584120750427246,
+        "inference_time_ms_per_token": 0.07506762497813989
+    },
+    {
+        "module_name": "model.layers.18.mlp.up_proj",
+        "perplexity": 6.587184906005859,
+        "inference_time_ms_per_token": 0.07586104988206363
+    },
+    {
+        "module_name": "model.layers.18.mlp.down_proj",
+        "perplexity": 6.746950626373291,
+        "inference_time_ms_per_token": 0.07438295614634845
+    },
+    {
+        "module_name": "model.layers.19.self_attn.q_proj",
+        "perplexity": 6.58055305480957,
+        "inference_time_ms_per_token": 0.07596576636564648
+    },
+    {
+        "module_name": "model.layers.19.self_attn.k_proj",
+        "perplexity": 6.579583644866943,
+        "inference_time_ms_per_token": 0.07474215149034
+    },
+    {
+        "module_name": "model.layers.19.self_attn.v_proj",
+        "perplexity": 6.585654258728027,
+        "inference_time_ms_per_token": 0.07458009280211536
+    },
+    {
+        "module_name": "model.layers.19.self_attn.o_proj",
+        "perplexity": 6.580935478210449,
+        "inference_time_ms_per_token": 0.07441960497105375
+    },
+    {
+        "module_name": "model.layers.19.mlp.gate_proj",
+        "perplexity": 6.584525108337402,
+        "inference_time_ms_per_token": 0.07469740150668097
+    },
+    {
+        "module_name": "model.layers.19.mlp.up_proj",
+        "perplexity": 6.58700704574585,
+        "inference_time_ms_per_token": 0.0743773524642836
+    },
+    {
+        "module_name": "model.layers.19.mlp.down_proj",
+        "perplexity": 6.741498947143555,
+        "inference_time_ms_per_token": 0.07378452551280353
+    },
+    {
+        "module_name": "model.layers.20.self_attn.q_proj",
+        "perplexity": 6.580776214599609,
+        "inference_time_ms_per_token": 0.0758672149468821
+    },
+    {
+        "module_name": "model.layers.20.self_attn.k_proj",
+        "perplexity": 6.580244064331055,
+        "inference_time_ms_per_token": 0.07592271743936742
+    },
+    {
+        "module_name": "model.layers.20.self_attn.v_proj",
+        "perplexity": 6.584115028381348,
+        "inference_time_ms_per_token": 0.07500557696565668
+    },
+    {
+        "module_name": "model.layers.20.self_attn.o_proj",
+        "perplexity": 6.5806660652160645,
+        "inference_time_ms_per_token": 0.07561300155964304
+    },
+    {
+        "module_name": "model.layers.20.mlp.gate_proj",
+        "perplexity": 6.585169792175293,
+        "inference_time_ms_per_token": 0.07566256556950562
+    },
+    {
+        "module_name": "model.layers.20.mlp.up_proj",
+        "perplexity": 6.586751937866211,
+        "inference_time_ms_per_token": 0.07429260565034042
+    },
+    {
+        "module_name": "model.layers.20.mlp.down_proj",
+        "perplexity": 6.733231544494629,
+        "inference_time_ms_per_token": 0.07451375494612024
+    },
+    {
+        "module_name": "model.layers.21.self_attn.q_proj",
+        "perplexity": 6.580132007598877,
+        "inference_time_ms_per_token": 0.07436940856013738
+    },
+    {
+        "module_name": "model.layers.21.self_attn.k_proj",
+        "perplexity": 6.579898357391357,
+        "inference_time_ms_per_token": 0.07442733582029952
+    },
+    {
+        "module_name": "model.layers.21.self_attn.v_proj",
+        "perplexity": 6.584303379058838,
+        "inference_time_ms_per_token": 0.0743415727682993
+    },
+    {
+        "module_name": "model.layers.21.self_attn.o_proj",
+        "perplexity": 6.581111907958984,
+        "inference_time_ms_per_token": 0.07408990251257065
+    },
+    {
+        "module_name": "model.layers.21.mlp.gate_proj",
+        "perplexity": 6.5860090255737305,
+        "inference_time_ms_per_token": 0.07403290694487011
+    },
+    {
+        "module_name": "model.layers.21.mlp.up_proj",
+        "perplexity": 6.587665557861328,
+        "inference_time_ms_per_token": 0.07432521319558434
+    },
+    {
+        "module_name": "model.layers.21.mlp.down_proj",
+        "perplexity": 6.750522136688232,
+        "inference_time_ms_per_token": 0.07458859639810332
+    },
+    {
+        "module_name": "model.layers.22.self_attn.q_proj",
+        "perplexity": 6.580153465270996,
+        "inference_time_ms_per_token": 0.07416108652209559
+    },
+    {
+        "module_name": "model.layers.22.self_attn.k_proj",
+        "perplexity": 6.58051061630249,
+        "inference_time_ms_per_token": 0.07401462311440325
+    },
+    {
+        "module_name": "model.layers.22.self_attn.v_proj",
+        "perplexity": 6.582874298095703,
+        "inference_time_ms_per_token": 0.07422181393237824
+    },
+    {
+        "module_name": "model.layers.22.self_attn.o_proj",
+        "perplexity": 6.580538272857666,
+        "inference_time_ms_per_token": 0.07390131848923703
+    },
+    {
+        "module_name": "model.layers.22.mlp.gate_proj",
+        "perplexity": 6.585597515106201,
+        "inference_time_ms_per_token": 0.07378361749310866
+    },
+    {
+        "module_name": "model.layers.22.mlp.up_proj",
+        "perplexity": 6.586204528808594,
+        "inference_time_ms_per_token": 0.07363806041419929
+    },
+    {
+        "module_name": "model.layers.22.mlp.down_proj",
+        "perplexity": 6.721744060516357,
+        "inference_time_ms_per_token": 0.0748523955649518
+    },
+    {
+        "module_name": "model.layers.23.self_attn.q_proj",
+        "perplexity": 6.579893112182617,
+        "inference_time_ms_per_token": 0.07514754592949617
+    },
+    {
+        "module_name": "model.layers.23.self_attn.k_proj",
+        "perplexity": 6.580343246459961,
+        "inference_time_ms_per_token": 0.075615017126638
+    },
+    {
+        "module_name": "model.layers.23.self_attn.v_proj",
+        "perplexity": 6.584170341491699,
+        "inference_time_ms_per_token": 0.07466298299478301
+    },
+    {
+        "module_name": "model.layers.23.self_attn.o_proj",
+        "perplexity": 6.580804347991943,
+        "inference_time_ms_per_token": 0.07623314350209337
+    },
+    {
+        "module_name": "model.layers.23.mlp.gate_proj",
+        "perplexity": 6.586030960083008,
+        "inference_time_ms_per_token": 0.07508502107985476
+    },
+    {
+        "module_name": "model.layers.23.mlp.up_proj",
+        "perplexity": 6.585911273956299,
+        "inference_time_ms_per_token": 0.07451656016897648
+    },
+    {
+        "module_name": "model.layers.23.mlp.down_proj",
+        "perplexity": 6.6995320320129395,
+        "inference_time_ms_per_token": 0.07504983658486224
+    },
+    {
+        "module_name": "model.layers.24.self_attn.q_proj",
+        "perplexity": 6.580207347869873,
+        "inference_time_ms_per_token": 0.07429940480712457
+    },
+    {
+        "module_name": "model.layers.24.self_attn.k_proj",
+        "perplexity": 6.5808587074279785,
+        "inference_time_ms_per_token": 0.07415225996193311
+    },
+    {
+        "module_name": "model.layers.24.self_attn.v_proj",
+        "perplexity": 6.587330341339111,
+        "inference_time_ms_per_token": 0.07417546772787757
+    },
+    {
+        "module_name": "model.layers.24.self_attn.o_proj",
+        "perplexity": 6.5809550285339355,
+        "inference_time_ms_per_token": 0.07432857472845848
+    },
+    {
+        "module_name": "model.layers.24.mlp.gate_proj",
+        "perplexity": 6.585206985473633,
+        "inference_time_ms_per_token": 0.07438408398459144
+    },
+    {
+        "module_name": "model.layers.24.mlp.up_proj",
+        "perplexity": 6.5850348472595215,
+        "inference_time_ms_per_token": 0.07404857324370255
+    },
+    {
+        "module_name": "model.layers.24.mlp.down_proj",
+        "perplexity": 6.685178279876709,
+        "inference_time_ms_per_token": 0.07438815739137906
+    },
+    {
+        "module_name": "model.layers.25.self_attn.q_proj",
+        "perplexity": 6.580620765686035,
+        "inference_time_ms_per_token": 0.07573920615175937
+    },
+    {
+        "module_name": "model.layers.25.self_attn.k_proj",
+        "perplexity": 6.580889701843262,
+        "inference_time_ms_per_token": 0.07577426890109448
+    },
+    {
+        "module_name": "model.layers.25.self_attn.v_proj",
+        "perplexity": 6.582743167877197,
+        "inference_time_ms_per_token": 0.0755395568008964
+    },
+    {
+        "module_name": "model.layers.25.self_attn.o_proj",
+        "perplexity": 6.580811500549316,
+        "inference_time_ms_per_token": 0.07665305103816039
+    },
+    {
+        "module_name": "model.layers.25.mlp.gate_proj",
+        "perplexity": 6.584936141967773,
+        "inference_time_ms_per_token": 0.07526301154008148
+    },
+    {
+        "module_name": "model.layers.25.mlp.up_proj",
+        "perplexity": 6.586251735687256,
+        "inference_time_ms_per_token": 0.0751296543905921
+    },
+    {
+        "module_name": "model.layers.25.mlp.down_proj",
+        "perplexity": 6.671987056732178,
+        "inference_time_ms_per_token": 0.07527936265823688
+    },
+    {
+        "module_name": "model.layers.26.self_attn.q_proj",
+        "perplexity": 6.581153392791748,
+        "inference_time_ms_per_token": 0.07494889590757113
+    },
+    {
+        "module_name": "model.layers.26.self_attn.k_proj",
+        "perplexity": 6.5803046226501465,
+        "inference_time_ms_per_token": 0.0747775524220568
+    },
+    {
+        "module_name": "model.layers.26.self_attn.v_proj",
+        "perplexity": 6.585708141326904,
+        "inference_time_ms_per_token": 0.07474588671474593
+    },
+    {
+        "module_name": "model.layers.26.self_attn.o_proj",
+        "perplexity": 6.580866813659668,
+        "inference_time_ms_per_token": 0.07455537336092469
+    },
+    {
+        "module_name": "model.layers.26.mlp.gate_proj",
+        "perplexity": 6.585786819458008,
+        "inference_time_ms_per_token": 0.07467412779517207
+    },
+    {
+        "module_name": "model.layers.26.mlp.up_proj",
+        "perplexity": 6.585881233215332,
+        "inference_time_ms_per_token": 0.0740911233509686
+    },
+    {
+        "module_name": "model.layers.26.mlp.down_proj",
+        "perplexity": 6.6618218421936035,
+        "inference_time_ms_per_token": 0.07468359859277171
+    },
+    {
+        "module_name": "model.layers.27.self_attn.q_proj",
+        "perplexity": 6.580414772033691,
+        "inference_time_ms_per_token": 0.0744141365619416
+    },
+    {
+        "module_name": "model.layers.27.self_attn.k_proj",
+        "perplexity": 6.5806121826171875,
+        "inference_time_ms_per_token": 0.07385943967399868
+    },
+    {
+        "module_name": "model.layers.27.self_attn.v_proj",
+        "perplexity": 6.583280563354492,
+        "inference_time_ms_per_token": 0.07377565837075524
+    },
+    {
+        "module_name": "model.layers.27.self_attn.o_proj",
+        "perplexity": 6.580835819244385,
+        "inference_time_ms_per_token": 0.07216270933759973
+    },
+    {
+        "module_name": "model.layers.27.mlp.gate_proj",
+        "perplexity": 6.584748268127441,
+        "inference_time_ms_per_token": 0.07346682176522329
+    },
+    {
+        "module_name": "model.layers.27.mlp.up_proj",
+        "perplexity": 6.585821151733398,
+        "inference_time_ms_per_token": 0.07380315598021163
+    },
+    {
+        "module_name": "model.layers.27.mlp.down_proj",
+        "perplexity": 6.6914896965026855,
+        "inference_time_ms_per_token": 0.07456167200778394
+    },
+    {
+        "module_name": "model.layers.28.self_attn.q_proj",
+        "perplexity": 6.580935478210449,
+        "inference_time_ms_per_token": 0.07338371513583136
+    },
+    {
+        "module_name": "model.layers.28.self_attn.k_proj",
+        "perplexity": 6.580542087554932,
+        "inference_time_ms_per_token": 0.07430929325996562
+    },
+    {
+        "module_name": "model.layers.28.self_attn.v_proj",
+        "perplexity": 6.584327697753906,
+        "inference_time_ms_per_token": 0.07457708805165392
+    },
+    {
+        "module_name": "model.layers.28.self_attn.o_proj",
+        "perplexity": 6.581181526184082,
+        "inference_time_ms_per_token": 0.07541043876756168
+    },
+    {
+        "module_name": "model.layers.28.mlp.gate_proj",
+        "perplexity": 6.585916519165039,
+        "inference_time_ms_per_token": 0.07412313569522073
+    },
+    {
+        "module_name": "model.layers.28.mlp.up_proj",
+        "perplexity": 6.5848188400268555,
+        "inference_time_ms_per_token": 0.07724072070831949
+    },
+    {
+        "module_name": "model.layers.28.mlp.down_proj",
+        "perplexity": 6.662947654724121,
+        "inference_time_ms_per_token": 0.07938656908400515
+    },
+    {
+        "module_name": "model.layers.29.self_attn.q_proj",
+        "perplexity": 6.580842971801758,
+        "inference_time_ms_per_token": 0.07950824541403047
+    },
+    {
+        "module_name": "model.layers.29.self_attn.k_proj",
+        "perplexity": 6.58016300201416,
+        "inference_time_ms_per_token": 0.07982179628196337
+    },
+    {
+        "module_name": "model.layers.29.self_attn.v_proj",
+        "perplexity": 6.582701206207275,
+        "inference_time_ms_per_token": 0.0789228821477146
+    },
+    {
+        "module_name": "model.layers.29.self_attn.o_proj",
+        "perplexity": 6.580954551696777,
+        "inference_time_ms_per_token": 0.07899265931853165
+    },
+    {
+        "module_name": "model.layers.29.mlp.gate_proj",
+        "perplexity": 6.584441184997559,
+        "inference_time_ms_per_token": 0.07887090858838237
+    },
+    {
+        "module_name": "model.layers.29.mlp.up_proj",
+        "perplexity": 6.587587356567383,
+        "inference_time_ms_per_token": 0.07908842073264696
+    },
+    {
+        "module_name": "model.layers.29.mlp.down_proj",
+        "perplexity": 6.669931888580322,
+        "inference_time_ms_per_token": 0.07909439303350786
+    },
+    {
+        "module_name": "model.layers.30.self_attn.q_proj",
+        "perplexity": 6.581493854522705,
+        "inference_time_ms_per_token": 0.07868713859125231
+    },
+    {
+        "module_name": "model.layers.30.self_attn.k_proj",
+        "perplexity": 6.580563545227051,
+        "inference_time_ms_per_token": 0.08046428193437292
+    },
+    {
+        "module_name": "model.layers.30.self_attn.v_proj",
+        "perplexity": 6.58453369140625,
+        "inference_time_ms_per_token": 0.07952558064291664
+    },
+    {
+        "module_name": "model.layers.30.self_attn.o_proj",
+        "perplexity": 6.581700325012207,
+        "inference_time_ms_per_token": 0.07838961080456457
+    },
+    {
+        "module_name": "model.layers.30.mlp.gate_proj",
+        "perplexity": 6.586763381958008,
+        "inference_time_ms_per_token": 0.07819900275967645
+    },
+    {
+        "module_name": "model.layers.30.mlp.up_proj",
+        "perplexity": 6.598066806793213,
+        "inference_time_ms_per_token": 0.07772983388697847
+    },
+    {
+        "module_name": "model.layers.30.mlp.down_proj",
+        "perplexity": 6.817669868469238,
+        "inference_time_ms_per_token": 0.07775249210655266
+    },
+    {
+        "module_name": "model.layers.31.self_attn.q_proj",
+        "perplexity": 6.58050537109375,
+        "inference_time_ms_per_token": 0.07810671786044507
+    },
+    {
+        "module_name": "model.layers.31.self_attn.k_proj",
+        "perplexity": 6.580061912536621,
+        "inference_time_ms_per_token": 0.07838871800307687
+    },
+    {
+        "module_name": "model.layers.31.self_attn.v_proj",
+        "perplexity": 6.587342262268066,
+        "inference_time_ms_per_token": 0.07954713976975028
+    },
+    {
+        "module_name": "model.layers.31.self_attn.o_proj",
+        "perplexity": 6.583991527557373,
+        "inference_time_ms_per_token": 0.07909953340570977
+    },
+    {
+        "module_name": "model.layers.31.mlp.gate_proj",
+        "perplexity": 6.592824935913086,
+        "inference_time_ms_per_token": 0.07957623698187212
+    },
+    {
+        "module_name": "model.layers.31.mlp.up_proj",
+        "perplexity": 6.606778144836426,
+        "inference_time_ms_per_token": 0.07933659925528452
+    },
+    {
+        "module_name": "model.layers.31.mlp.down_proj",
+        "perplexity": 7.5444655418396,
+        "inference_time_ms_per_token": 0.0789604440648505
+    }
+]

@@ -25,7 +25,9 @@ The workflow is designed to first analyze model sensitivity, then generate an op
 
 ### **1\. Analyze Model Sensitivity (PPL Degradation or Top-k Stability)**
 
-The first step is to run an analysis to determine how sensitive each module is to quantization. This fork provides two primary methods for this: PPL Degradation and Top-k Stability.
+The first step is to run an analysis to determine how sensitive each module is to quantization. This fork provides two primary methods for this: PPL Degradation and Top-k Stability.  
+
+Other sensitivity metrics can be computed using the [LMAnalyser tool](https://github.com/Marouan-git/LMAnalyser) and then used here.
 
 #### **a. Perplexity (PPL) Degradation Analysis**
 
@@ -38,6 +40,8 @@ bash scripts/run_ppl_module_analysis.sh
 ```
 * **Output**: The script will generate a JSON file containing the perplexity score for each module.
 
+**Note**: In order to gain time, it is advised to save the weights of the model using the Spinquant original script (see [SpinQuant repo](https://github.com/facebookresearch/SpinQuant)). Then you can specify the path in the script using the --load_qmodel_path argument. Otherwise, the script will run the weights quantization using GPTQ, which can be a bit time consuming.
+
 #### **b. Top-k Tokens Stability Analysis**
 
 **What it does**: This script also iterates through each module. For each, it compares the top-k predicted tokens (logits) of the baseline model (W4A16) against the model with that single module quantized. It calculates a "hybrid score" based on rank instability (Jaccard distance) and confidence shift (JSD). Modules that cause a larger change in the top-k predictions are considered more sensitive.
@@ -47,13 +51,13 @@ bash scripts/run_ppl_module_analysis.sh
 ```
 bash scripts/run_topk_module_analysis.sh
 ```
-* **Output**: This will produce a JSON file in the topk\_analysis/ directory containing the hybrid stability score for each module.
+* **Output**: This will produce a JSON file containing the hybrid stability score for each module.
 
 ---
 
 ### **2\. Optimize Mixed-Precision Configuration**
 
-**What it does**: After generating a sensitivity file (from step 1, or from another tool like LMAnalyser), this Python script uses the "Bang for the Buck" greedy algorithm to solve the Multiple-Choice Knapsack Problem. It takes the sensitivity scores, calculates different BOPs budgets, and generates the most optimal mixed-precision configuration for each budget.
+**What it does**: After generating a sensitivity file (from step 1, or from another tool like [LMAnalyser](https://github.com/Marouan-git/LMAnalyser)), this Python script uses the "Bang for the Buck" greedy algorithm to solve the Multiple-Choice Knapsack Problem. It takes the sensitivity scores, calculates different BOPs budgets, and generates the most optimal mixed-precision configuration for each budget.
 
 **Command**:
 
@@ -67,7 +71,13 @@ python optimize_quant_config_multi_greedy.py
     --budget_multiplier 0.25
 ```
 
+The bops file can be generated using the [LMAnalyser tool](https://github.com/Marouan-git/LMAnalyser).  
+
+The **ppl_4bits_analysis** and the **ppl_8bits_analysis** correspond respectively to the ppl degradation when the module is quantized to 4 bits and to 8 bits. We need both because the optimizer must compute the loss caused by upgrading the module from 16 bits to 8 bits but also from 8 bits to 4 bits.
+
 * **Output**: A JSON file containing the optimized bit precision configuration for the specified budget.
+
+Ready-to-use optimized configurations for different models are available in the [multi_best_configs](./multi_best_configs/) directory.
 
 ---
 
@@ -90,7 +100,7 @@ bash scripts/run_mixed_precision_ppl_eval.sh
 
 #### **b. Zero-Shot Accuracy Evaluation for a Mixed-Precision Config**
 
-**What it does**: This script evaluates a given mixed-precision configuration on a suite of five zero-shot commonsense reasoning tasks (ARC-easy, ARC-challenge, PIQA, HellaSwag, Winogrande) using the lm-evaluation-harness.
+**What it does**: This script evaluates a given mixed-precision configuration on a suite of five zero-shot commonsense reasoning tasks (ARC-easy, ARC-challenge, PIQA, HellaSwag, Winogrande) using the lm-evaluation-harness tool.
 
 **Command**:
 
@@ -105,5 +115,6 @@ bash scripts/run_mixed_precision_zero_shot_eval.sh
 
 ### **4\. Plotting and General Notes**
 
-* The plotting/ directory contains various Python scripts (plot\_mixed\_precision\_results.py, plot\_sensitivity.py, etc.) to visualize the results from the analysis and evaluation steps.  
-* **Important**: The shell scripts in the scripts/ directory may contain hardcoded paths (e.g., for models, datasets, or output files). You may need to edit these paths to match your local environment setup.
+The [plotting](./plotting/) directory contains various Python scripts (plot\_mixed\_precision\_results.py, plot\_sensitivity.py, etc.) to visualize the results from the analysis and evaluation steps. You might need to update some hard coded paths corresponding to the location of the results files.  
+
+**Important**: The shell scripts in the scripts/ directory may contain hardcoded paths (e.g., for models, datasets, or output files). You may need to edit these paths to match your local environment setup.

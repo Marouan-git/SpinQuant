@@ -1,0 +1,6 @@
+{
+    "model_name": "Llama-2-7b-hf",
+    "perplexity": 5.851950645446777,
+    "inference_time_ms_per_token": 0.13191260487200265,
+    "mixed_precision_config": "./multi_best_configs/llama2-7b/topk/k10/module_wise/best_config_Llama-2-7b_module_topk10_0.15.json"
+}

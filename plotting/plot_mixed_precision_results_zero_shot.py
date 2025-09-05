@@ -5,9 +5,9 @@ import os
 
 # --- Configuration ---
 # 1. Set the path to your zero-shot results folder.
-DATA_FOLDER = './mixed_precision_results/llama2-7b/lm_eval/module_wise/'
+DATA_FOLDER = './mixed_precision_results/llama3.2-3b/zeroshot'
 
-BASELINE_FILE_NAME = "lm_eval_results_mixed_precision_base_accuracy.json"
+BASELINE_FILE_NAME = "lm_eval_results_mixed_precision_base_accuracy_llama3.2-3b.json"
 
 # 2. Specify the granularity to plot ('layer' or 'module').
 TARGET_GRANULARITY = 'module'
@@ -16,27 +16,26 @@ TARGET_GRANULARITY = 'module'
 #    The keys MUST match the 'metric' part of your filenames.
 PLOT_STYLES = {
     'ratio': {'label': 'Max-Median Ratio', 'marker': 's', 'linestyle': '--', 'color': 'red'},
-    'fisherlse': {'label': 'Fisher Information (LSE)', 'marker': 'D', 'linestyle': ':', 'color': 'orange'},
+    'fisher': {'label': 'Fisher Information (LSE)', 'marker': 'D', 'linestyle': ':', 'color': 'orange'},
     'fgmp': {'label': 'FGMP', 'marker': 'x', 'linestyle': '-', 'color': 'blue'},
     'fgmpblock32': {'label': 'FGMP Block 32', 'marker': 'p', 'linestyle': '-', 'color': 'brown'},
-    'topk10': {'label': 'Top-k10', 'marker': 'v', 'linestyle': '-', 'color': 'purple'},
+    'topk': {'label': 'Top-k10', 'marker': 'v', 'linestyle': '-', 'color': 'purple'},
     'ppl': {'label': 'PPL Degradation', 'marker': 'o', 'linestyle': '-', 'color': 'green'},
-
 }
 
-PLOT_STYLES = {
-    'fgmp': {'label': 'FGMP', 'marker': '<', 'linestyle': '--', 'color': 'orange'},
-    'fgmpblock32': {'label': 'FGMP Block 32', 'marker': 's', 'linestyle': '--', 'color': 'red'},
-    'fgmpblock64': {'label': 'FGMP Block 64', 'marker': 'x', 'linestyle': '-', 'color': 'blue'},
-    'fgmpblock128': {'label': 'FGMP Block 128', 'marker': 'v', 'linestyle': '-', 'color': 'purple'},
-}
+# PLOT_STYLES = {
+#     'fgmp': {'label': 'FGMP', 'marker': '<', 'linestyle': '--', 'color': 'orange'},
+#     'fgmpblock32': {'label': 'FGMP Block 32', 'marker': 's', 'linestyle': '--', 'color': 'red'},
+#     'fgmpblock64': {'label': 'FGMP Block 64', 'marker': 'x', 'linestyle': '-', 'color': 'blue'},
+#     'fgmpblock128': {'label': 'FGMP Block 128', 'marker': 'v', 'linestyle': '-', 'color': 'purple'},
+# }
 
-PLOT_STYLES = {
-    'topk5': {'label': 'Top-k5', 'marker': '<', 'linestyle': '--', 'color': 'orange'},
-    'topk10': {'label': 'Top-k10', 'marker': 's', 'linestyle': '--', 'color': 'red'},
-    'topk20': {'label': 'Top-k20', 'marker': 'x', 'linestyle': '-', 'color': 'blue'},
-    'topk50': {'label': 'Top-k50', 'marker': 'v', 'linestyle': '-', 'color': 'purple'},
-}
+# PLOT_STYLES = {
+#     'topk5': {'label': 'Top-k5', 'marker': '<', 'linestyle': '--', 'color': 'orange'},
+#     'topk10': {'label': 'Top-k10', 'marker': 's', 'linestyle': '--', 'color': 'red'},
+#     'topk20': {'label': 'Top-k20', 'marker': 'x', 'linestyle': '-', 'color': 'blue'},
+#     'topk50': {'label': 'Top-k50', 'marker': 'v', 'linestyle': '-', 'color': 'purple'},
+# }
 
 
 

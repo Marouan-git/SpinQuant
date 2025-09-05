@@ -1,0 +1,6 @@
+{
+    "model_name": "Meta-Llama-3-8B",
+    "perplexity": 6.581302642822266,
+    "inference_time_ms_per_token": 0.3375132168438418,
+    "mixed_precision_config": "./multi_best_configs/llama3-8b/best_config_Llama-3-8B_fgmpblock32_0.65.json"
+}

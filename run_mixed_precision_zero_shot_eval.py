@@ -206,8 +206,8 @@ def main():
         mean_accuracy = sum([task_results[task]["mean_accuracy"] for task in tasks_to_run]) / len(tasks_to_run)
         task_results["mean_accuracy"] = mean_accuracy
 
-        results_filepath = f"lm_eval_results_mixed_precision_module_wise_{os.path.basename(ptq_args.mixed_precision_config)}"
-        #results_filepath = f"lm_eval_results_mixed_precision_base_accuracy.json"
+        #results_filepath = f"lm_eval_results_mixed_precision_module_wise_{os.path.basename(ptq_args.mixed_precision_config)}"
+        results_filepath = f"lm_eval_results_mixed_precision_base_accuracy_llama3.2-3b.json"
 
 
         try:

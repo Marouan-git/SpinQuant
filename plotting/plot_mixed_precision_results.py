@@ -5,7 +5,7 @@ import os
 
 # --- Configuration ---
 # 1. Set the path to your results folder.
-DATA_FOLDER = './mixed_precision_results/llama2-7b/multi_choice/wiki2/module_wise'
+DATA_FOLDER = './mixed_precision_results/llama2-7b/multi_choice/wiki2/module_wise/'
 
 # 2. Specify the granularity to plot ('layer' or 'module').
 #    The script will only process files matching this granularity.
@@ -16,7 +16,7 @@ TARGET_GRANULARITY = 'module'
 #    Example: for '..._layer_fisherlse_0.35.json', the key is 'fisherlse'.
 PLOT_STYLES = {
     'ratio': {'label': 'Max-Median Ratio', 'marker': 's', 'linestyle': '--', 'color': 'red'},
-    'fisherlse': {'label': 'Fisher Information (LSE)', 'marker': 'D', 'linestyle': ':', 'color': 'orange'},
+    'fisherlse': {'label': 'Fisher Information', 'marker': 'D', 'linestyle': ':', 'color': 'orange'},
     'fgmp': {'label': 'FGMP', 'marker': 'x', 'linestyle': '-', 'color': 'blue'},
     'fgmpblock32': {'label': 'FGMP Block 32', 'marker': 'p', 'linestyle': '-', 'color': 'brown'},
     'topk10': {'label': 'Top-k10', 'marker': 'v', 'linestyle': '-', 'color': 'purple'},
@@ -41,7 +41,9 @@ PLOT_STYLES = {
 
 # 4. Set the baseline perplexity for the reference line.
 BASE_PERPLEXITY = 5.651648044586182 # Wiki2
-#BASE_PERPLEXITY = 7.50929594039917 # c4
+#BASE_PERPLEXITY = 6.58 # Llama-3-8B on Wiki2
+#BASE_PERPLEXITY = 8.4345 # Llama-3.2-3B on Wiki2
+#BASE_PERPLEXITY = 7.50929594039917 # c4q
 
 # --- Data Processing ---
 results = []

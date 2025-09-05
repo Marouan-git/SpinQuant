@@ -1,0 +1,6 @@
+{
+    "model_name": "Llama-3.2-3B",
+    "perplexity": 12.70785903930664,
+    "inference_time_ms_per_token": 0.09142353686880558,
+    "mixed_precision_config": "./multi_best_configs/llama3.2-3b/best_config_Llama-3.2-3B_module_ratio_0.15.json"
+}

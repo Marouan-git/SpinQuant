@@ -23,8 +23,10 @@ def load_and_prepare_data(args):
                 topk_data_list = json.load(f)
                 topk_data = {item['layer_id']: item['hybrid_score'] for item in topk_data_list}
         
-            
-        quantizable_units = list(range(32))
+        # Get number of keys/layers
+        num_layers = len(bops_data)
+        print(f"Number of layers detected: {num_layers}")
+        quantizable_units = list(range(num_layers))
         base_gmacs = {i: bops_data[str(i)] / (4*4) for i in quantizable_units}
 
     elif args.granularity == 'module':

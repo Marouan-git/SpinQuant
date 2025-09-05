@@ -1,0 +1,6 @@
+{
+    "model_name": "Llama-2-7b-hf",
+    "perplexity": 7.011930465698242,
+    "inference_time_ms_per_token": 0.14280457166304072,
+    "mixed_precision_config": "./multi_best_configs/topk/layer_wise/best_config_greedy_layer_topk_0.15.json"
+}

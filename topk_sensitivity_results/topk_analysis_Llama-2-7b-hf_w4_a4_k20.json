@@ -1,0 +1,258 @@
+[
+    {
+        "layer_id": 0,
+        "confidence_shift": 0.0026397705078125,
+        "rank_instability": 0.08939218648451376,
+        "normalized_confidence_shift": 0.020212494176697772,
+        "normalized_rank_instability": 0.02059228102016592,
+        "hybrid_score": 0.020402387598431847
+    },
+    {
+        "layer_id": 1,
+        "confidence_shift": 0.005092075892857143,
+        "rank_instability": 0.12660276785197938,
+        "normalized_confidence_shift": 0.12165066197796914,
+        "normalized_rank_instability": 0.2657427779193012,
+        "hybrid_score": 0.19369671994863516
+    },
+    {
+        "layer_id": 2,
+        "confidence_shift": 0.0033667428152901785,
+        "rank_instability": 0.101600768771411,
+        "normalized_confidence_shift": 0.05028327547600799,
+        "normalized_rank_instability": 0.10102477909136402,
+        "hybrid_score": 0.075654027283686
+    },
+    {
+        "layer_id": 3,
+        "confidence_shift": 0.0037972586495535715,
+        "rank_instability": 0.1105597411557736,
+        "normalized_confidence_shift": 0.06809130937889786,
+        "normalized_rank_instability": 0.16004821949513084,
+        "hybrid_score": 0.11406976443701436
+    },
+    {
+        "layer_id": 4,
+        "confidence_shift": 0.003837948753720238,
+        "rank_instability": 0.11137304774587507,
+        "normalized_confidence_shift": 0.0697744315705634,
+        "normalized_rank_instability": 0.16540644039272323,
+        "hybrid_score": 0.11759043598164332
+    },
+    {
+        "layer_id": 5,
+        "confidence_shift": 0.0031727382114955355,
+        "rank_instability": 0.10247882207534056,
+        "normalized_confidence_shift": 0.04225838931217408,
+        "normalized_rank_instability": 0.10680956384483377,
+        "hybrid_score": 0.07453397657850393
+    },
+    {
+        "layer_id": 6,
+        "confidence_shift": 0.0033017113095238095,
+        "rank_instability": 0.10540061451199736,
+        "normalized_confidence_shift": 0.04759328554468539,
+        "normalized_rank_instability": 0.126058896732409,
+        "hybrid_score": 0.0868260911385472
+    },
+    {
+        "layer_id": 7,
+        "confidence_shift": 0.0028839111328125,
+        "rank_instability": 0.09904321842643367,
+        "normalized_confidence_shift": 0.03031122732669101,
+        "normalized_rank_instability": 0.0841751434534769,
+        "hybrid_score": 0.05724318539008395
+    },
+    {
+        "layer_id": 8,
+        "confidence_shift": 0.002430870419456845,
+        "rank_instability": 0.09089526561158068,
+        "normalized_confidence_shift": 0.011571465067700574,
+        "normalized_rank_instability": 0.03049485661392827,
+        "hybrid_score": 0.02103316084081442
+    },
+    {
+        "layer_id": 9,
+        "confidence_shift": 0.002281552269345238,
+        "rank_instability": 0.08848191919644459,
+        "normalized_confidence_shift": 0.0053950077393565,
+        "normalized_rank_instability": 0.014595264317376778,
+        "hybrid_score": 0.009995136028366639
+    },
+    {
+        "layer_id": 10,
+        "confidence_shift": 0.0021798270089285715,
+        "rank_instability": 0.08641435367474479,
+        "normalized_confidence_shift": 0.0011872022601926567,
+        "normalized_rank_instability": 0.0009737433308921666,
+        "hybrid_score": 0.0010804727955424118
+    },
+    {
+        "layer_id": 11,
+        "confidence_shift": 0.0021656581333705355,
+        "rank_instability": 0.08626655240204291,
+        "normalized_confidence_shift": 0.0006011150684519673,
+        "normalized_rank_instability": 0.0,
+        "hybrid_score": 0.00030055753422598367
+    },
+    {
+        "layer_id": 12,
+        "confidence_shift": 0.0022328694661458335,
+        "rank_instability": 0.08870069666812337,
+        "normalized_confidence_shift": 0.0033812722600423816,
+        "normalized_rank_instability": 0.016036612555469166,
+        "hybrid_score": 0.009708942407755774
+    },
+    {
+        "layer_id": 13,
+        "confidence_shift": 0.0025921776181175595,
+        "rank_instability": 0.09714995723613384,
+        "normalized_confidence_shift": 0.018243842327517544,
+        "normalized_rank_instability": 0.07170197306738728,
+        "hybrid_score": 0.04497290769745241
+    },
+    {
+        "layer_id": 14,
+        "confidence_shift": 0.002765473865327381,
+        "rank_instability": 0.10284064914525375,
+        "normalized_confidence_shift": 0.02541213951880739,
+        "normalized_rank_instability": 0.10919335046468834,
+        "hybrid_score": 0.06730274499174786
+    },
+    {
+        "layer_id": 15,
+        "confidence_shift": 0.003130958193824405,
+        "rank_instability": 0.11074812896703463,
+        "normalized_confidence_shift": 0.040530183490374655,
+        "normalized_rank_instability": 0.16128935478093323,
+        "hybrid_score": 0.10090976913565394
+    },
+    {
+        "layer_id": 16,
+        "confidence_shift": 0.003672645205543155,
+        "rank_instability": 0.11974121294104544,
+        "normalized_confidence_shift": 0.06293674766692216,
+        "normalized_rank_instability": 0.22053752892561349,
+        "hybrid_score": 0.14173713829626783
+    },
+    {
+        "layer_id": 17,
+        "confidence_shift": 0.0036566598074776785,
+        "rank_instability": 0.11856533737862061,
+        "normalized_confidence_shift": 0.062275521091624965,
+        "normalized_rank_instability": 0.21279063361179731,
+        "hybrid_score": 0.13753307735171114
+    },
+    {
+        "layer_id": 18,
+        "confidence_shift": 0.003609066917782738,
+        "rank_instability": 0.11968972979218778,
+        "normalized_confidence_shift": 0.06030686924244474,
+        "normalized_rank_instability": 0.22019834799748586,
+        "hybrid_score": 0.1402526086199653
+    },
+    {
+        "layer_id": 19,
+        "confidence_shift": 0.0034550258091517855,
+        "rank_instability": 0.11611322960381883,
+        "normalized_confidence_shift": 0.05393504951685376,
+        "normalized_rank_instability": 0.19663567399140067,
+        "hybrid_score": 0.12528536175412722
+    },
+    {
+        "layer_id": 20,
+        "confidence_shift": 0.003806341262090774,
+        "rank_instability": 0.1186878536692798,
+        "normalized_confidence_shift": 0.06846700629668036,
+        "normalized_rank_instability": 0.2135977945974517,
+        "hybrid_score": 0.14103240044706603
+    },
+    {
+        "layer_id": 21,
+        "confidence_shift": 0.0033176967075892855,
+        "rank_instability": 0.10973263223586978,
+        "normalized_confidence_shift": 0.048254512119982565,
+        "normalized_rank_instability": 0.15459906618301908,
+        "hybrid_score": 0.10142678915150083
+    },
+    {
+        "layer_id": 22,
+        "confidence_shift": 0.0029427664620535715,
+        "rank_instability": 0.10373406845654509,
+        "normalized_confidence_shift": 0.032745743353921525,
+        "normalized_rank_instability": 0.11507936944244758,
+        "hybrid_score": 0.07391255639818456
+    },
+    {
+        "layer_id": 23,
+        "confidence_shift": 0.0026259649367559525,
+        "rank_instability": 0.09982134628425146,
+        "normalized_confidence_shift": 0.0196414348616684,
+        "normalized_rank_instability": 0.08930160006836542,
+        "hybrid_score": 0.05447151746501691
+    },
+    {
+        "layer_id": 24,
+        "confidence_shift": 0.002422514415922619,
+        "rank_instability": 0.09609308886017183,
+        "normalized_confidence_shift": 0.011225823903340693,
+        "normalized_rank_instability": 0.06473912008303155,
+        "hybrid_score": 0.03798247199318612
+    },
+    {
+        "layer_id": 25,
+        "confidence_shift": 0.0023258754185267855,
+        "rank_instability": 0.09727281856591508,
+        "normalized_confidence_shift": 0.00722840869813503,
+        "normalized_rank_instability": 0.07251140723741861,
+        "hybrid_score": 0.03986990796777682
+    },
+    {
+        "layer_id": 26,
+        "confidence_shift": 0.0021869114467075895,
+        "rank_instability": 0.09389920830165233,
+        "normalized_confidence_shift": 0.0014802458560630013,
+        "normalized_rank_instability": 0.05028541123749733,
+        "hybrid_score": 0.025882828546780166
+    },
+    {
+        "layer_id": 27,
+        "confidence_shift": 0.0022404988606770835,
+        "rank_instability": 0.09596989594427628,
+        "normalized_confidence_shift": 0.0036968576709796703,
+        "normalized_rank_instability": 0.06392750135963658,
+        "hybrid_score": 0.03381217951530813
+    },
+    {
+        "layer_id": 28,
+        "confidence_shift": 0.002151125953311012,
+        "rank_instability": 0.09700389465576428,
+        "normalized_confidence_shift": 0.0,
+        "normalized_rank_instability": 0.0707396845773914,
+        "hybrid_score": 0.0353698422886957
+    },
+    {
+        "layer_id": 29,
+        "confidence_shift": 0.002231961204892113,
+        "rank_instability": 0.0994028858989316,
+        "normalized_confidence_shift": 0.0033437025682641237,
+        "normalized_rank_instability": 0.08654470222845528,
+        "hybrid_score": 0.0449442023983597
+    },
+    {
+        "layer_id": 30,
+        "confidence_shift": 0.004316784086681548,
+        "rank_instability": 0.12613071694565792,
+        "normalized_confidence_shift": 0.0895811730760561,
+        "normalized_rank_instability": 0.26263281537656125,
+        "hybrid_score": 0.17610699422630868
+    },
+    {
+        "layer_id": 31,
+        "confidence_shift": 0.026326497395833332,
+        "rank_instability": 0.2380532378794766,
+        "normalized_confidence_shift": 1.0,
+        "normalized_rank_instability": 1.0,
+        "hybrid_score": 1.0
+    }
+]

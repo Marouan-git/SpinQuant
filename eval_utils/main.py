@@ -23,7 +23,7 @@ from utils.convert_to_executorch import (
 )
 
 
-def ptq_model(args, model, model_args=None): # args is ptq_args from process_args
+def ptq_model(args, model, model_args=None, preloaded_q_state_dict=None): # args is ptq_args from process_args
     """
     Applies Post-Training Quantization (PTQ) modifications to the model,
     including optional rotation and Hadamard transforms based on arguments.
@@ -172,9 +172,14 @@ def ptq_model(args, model, model_args=None): # args is ptq_args from process_arg
         if args.load_qmodel_path: # Load Quantized Rotated Model
             assert args.rotate, "Model should be rotated to load a quantized model!"
             assert (not args.save_qmodel_path), "Cannot save a quantized model if it is already loaded!"
-            print(f"INFO: Loading pre-quantized model from {args.load_qmodel_path}")
-            save_dict = torch.load(args.load_qmodel_path, map_location='cpu') # Load to CPU first
-            model.load_state_dict(save_dict["model"])
+
+            if preloaded_q_state_dict is not None:
+                print("INFO: Loading state dict from pre-loaded object.")
+                model.load_state_dict(preloaded_q_state_dict)
+            else:
+                print(f"INFO: Loading pre-quantized model from {args.load_qmodel_path}")
+                save_dict = torch.load(args.load_qmodel_path, map_location='cpu') # Load to CPU first
+                model.load_state_dict(save_dict["model"])
             print("INFO: Pre-quantized model loaded.")
             # Note: If loading a pre-quantized model, subsequent GPTQ/RTN is skipped.
             # Ensure the loaded model matches the desired R3/R4 config.
@@ -366,6 +371,7 @@ def ptq_model(args, model, model_args=None): # args is ptq_args from process_arg
                         print(f"Warning: R3 not applied to layer {layer_idx} (not in selective list).")
                 elif is_global_had_mode:
                     # Global mode: Apply R3 to all layers
+                    k_quant_config["apply_rotation"] = True
                     rotation_utils.add_qk_rotation_wrapper_after_function_call_in_forward(
                         layer.self_attn, rope_function_name, config=model.config, **k_quant_config,
                     )

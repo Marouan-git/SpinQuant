@@ -1,0 +1,63 @@
+{
+  "winogrande": {
+    "accuracies": [
+      0.7308602999210734
+    ],
+    "stderrs": [
+      0.012464911951268736
+    ],
+    "mean_accuracy": 0.7308602999210734,
+    "stderr": 0.012464911951268736,
+    "variance": 0,
+    "nb_evals": 1
+  },
+  "hellaswag": {
+    "accuracies": [
+      0.7796255725951006
+    ],
+    "stderrs": [
+      0.004910049928688085
+    ],
+    "mean_accuracy": 0.7796255725951006,
+    "stderr": 0.004910049928688085,
+    "variance": 0,
+    "nb_evals": 1
+  },
+  "arc_challenge": {
+    "accuracies": [
+      0.4991467576791809
+    ],
+    "stderrs": [
+      0.014546892052005628
+    ],
+    "mean_accuracy": 0.4991467576791809,
+    "stderr": 0.014546892052005628,
+    "variance": 0,
+    "nb_evals": 1
+  },
+  "arc_easy": {
+    "accuracies": [
+      0.7718855218855218
+    ],
+    "stderrs": [
+      0.008454706925759356
+    ],
+    "mean_accuracy": 0.7718855218855218,
+    "stderr": 0.008454706925759356,
+    "variance": 0,
+    "nb_evals": 1
+  },
+  "piqa": {
+    "accuracies": [
+      0.7927094668117519
+    ],
+    "stderrs": [
+      0.00965335746360534
+    ],
+    "mean_accuracy": 0.7927094668117519,
+    "stderr": 0.00965335746360534,
+    "variance": 0,
+    "nb_evals": 1
+  },
+  "mean_accuracy": 0.7148455237785257
+}

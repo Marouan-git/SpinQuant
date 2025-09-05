@@ -8,6 +8,7 @@ import time
 
 import re
 
+import copy
 import torch
 import torch.distributed as dist
 from transformers import LlamaTokenizerFast
@@ -64,19 +65,32 @@ def main():
     print("Running baseline: W4A16 (all activations in full precision)")
     ptq_args.quantize_only_module = "DUMMY_MODULE_NAME" # Ensure no module is quantized
     
-    model = LlamaForCausalLM.from_pretrained(
+    base_model = LlamaForCausalLM.from_pretrained(
             pretrained_model_name_or_path=model_args.input_model,
             config=config,
             torch_dtype=dtype,
             token=model_args.access_token,
         )
     if process_word_embeddings:
-        model.lm_head.weight.data = model.model.embed_tokens.weight.data.clone()
-    model.cuda()
-    current_target_device = model.device
+        base_model.lm_head.weight.data = base_model.model.embed_tokens.weight.data.clone()
+    base_model.cuda()
+    current_target_device = base_model.device
 
-    # 2. Apply quantization settings for the current iteration
-    model = ptq_model(ptq_args, model, model_args)
+    # Create a dedicated copy for the baseline run
+    baseline_model = copy.deepcopy(base_model) 
+    baseline_model.cuda()
+    current_target_device = baseline_model.device
+
+    if ptq_args.load_qmodel_path is not None:
+        # Load the quantized weights from the .pt file
+        # We only need the 'model' part of the dictionary
+        preloaded_quantized_weights = torch.load(ptq_args.load_qmodel_path, map_location='cpu')["model"]
+
+        # 2. Apply quantization settings for the current iteration
+        model = ptq_model(ptq_args, baseline_model, model_args, preloaded_q_state_dict=preloaded_quantized_weights)
+    else:
+        model = ptq_model(ptq_args, baseline_model, model_args)
+
     model.seqlen = training_args.model_max_length
 
     model.to(current_target_device)
@@ -120,26 +134,21 @@ def main():
         json.dump(all_results, f, indent=4)
     print("="*80)
 
+    
+    
+
     # --- Main Analysis Loop ---
     for module_name in modules_to_test:
         print(f"\n[INFO] Running analysis for module: {module_name}")
 
         ptq_args.quantize_only_module = module_name
         
-        # Reload the base model to start fresh for each run
-        model = LlamaForCausalLM.from_pretrained(
-            pretrained_model_name_or_path=model_args.input_model,
-            config=config,
-            torch_dtype=dtype,
-            token=model_args.access_token,
-        )
-        if process_word_embeddings:
-            model.lm_head.weight.data = model.model.embed_tokens.weight.data.clone()
+        # 1. Create a fresh, clean model instance from the base structure
+        model = copy.deepcopy(base_model)
         model.cuda()
-        current_target_device = model.device
 
         # 2. Apply quantization settings for the current iteration
-        model = ptq_model(ptq_args, model, model_args)
+        model = ptq_model(ptq_args, model, model_args, preloaded_q_state_dict=preloaded_quantized_weights)
         model.seqlen = training_args.model_max_length
 
         model.to(current_target_device)
